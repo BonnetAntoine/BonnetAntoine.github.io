@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Antoine Bonnet</title>
+  <meta name="description" content="Prendre contact avec Antoine Bonnet — développeur Power Platform & automatisation. Disponible pour tout projet, mission ou opportunité." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --line2:   rgba(45,212,160,0.16);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+      --error:   #f87171;
+      --error-line: rgba(248,113,113,0.25);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--txt); font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; cursor: none; }
+
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    /* ─── CURSEUR ─── */
+    #cursor { position: fixed; width: 8px; height: 8px; background: var(--em); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width .25s var(--ease), height .25s var(--ease); }
+    #cursor-ring { position: fixed; width: 32px; height: 32px; border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: width .3s var(--ease), height .3s var(--ease), opacity .2s; }
+    body:has(a:hover) #cursor,
+    body:has(button:hover) #cursor,
+    body:has(input:focus) #cursor,
+    body:has(textarea:focus) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring,
+    body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    /* ─── NAV ─── */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.88); backdrop-filter: blur(16px); }
+    .nav-logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--em); letter-spacing: .04em; text-decoration: none; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--txt-dim); text-decoration: none; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--txt); }
+    .nav-links a.active { color: var(--em); }
+    .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--em); text-decoration: none; text-transform: uppercase; border: 1.5px solid var(--em); padding: 8px 18px; border-radius: 3px; background: var(--em-bg); }
+
+    /* ═══ HERO ═══ */
+    .contact-hero {
+      min-height: 52vh;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 108px 48px 72px;
+      position: relative;
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-blob { position: absolute; top: -60px; right: -60px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, rgba(45,212,160,0.10) 0%, rgba(45,212,160,0.03) 50%, transparent 70%); pointer-events: none; animation: blobDrift 10s ease-in-out infinite; }
+    @keyframes blobDrift { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-22px) scale(1.03); } }
+
+    .contact-tag { font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 24px; animation: fadeUp .8s var(--ease) both; }
+    .contact-title { font-family: var(--serif); font-size: clamp(52px, 8vw, 110px); line-height: 1.08; letter-spacing: -.03em; color: var(--txt); margin-bottom: 28px; animation: fadeUp .8s .08s var(--ease) both; }
+    .contact-title em { font-style: italic; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .contact-sub { font-size: 16px; color: var(--txt-mid); line-height: 1.7; max-width: 540px; animation: fadeUp .8s .16s var(--ease) both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+    /* ═══ LAYOUT PRINCIPAL ═══ */
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    /* ─── FORMULAIRE ─── */
+    .contact-form-col {
+      padding: 72px 80px 72px 48px;
+      border-right: 1px solid var(--line);
+    }
+
+    .form-section-label {
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .18em; text-transform: uppercase;
+      margin-bottom: 36px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .form-section-label::before { content: ''; width: 20px; height: 1px; background: var(--em); flex-shrink: 0; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim);
+      letter-spacing: .14em; text-transform: uppercase;
+    }
+
+    input, textarea, select {
+      background: var(--surface);
+      border: 1px solid var(--line2);
+      border-radius: 6px;
+      color: var(--txt);
+      font-family: var(--sans); font-size: 14px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      resize: none;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    input::placeholder, textarea::placeholder { color: var(--txt-dim); }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--em);
+      box-shadow: 0 0 0 3px rgba(45,212,160,0.08);
+    }
+    input.error, textarea.error { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113,0.08); }
+    .field-error { font-family: var(--mono); font-size: 9px; color: var(--error); letter-spacing: .06em; display: none; }
+    .field-error.visible { display: block; }
+
+    textarea { height: 140px; line-height: 1.6; }
+
+    /* Sujet chips */
+    .subject-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip {
+      font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+      padding: 6px 12px; border-radius: 20px;
+      border: 1px solid var(--line2); color: var(--txt-dim); background: transparent;
+      cursor: pointer; transition: border-color .2s, color .2s, background .2s;
+    }
+    .chip:hover { border-color: var(--em-line); color: var(--em); }
+    .chip.selected { border-color: var(--em); color: var(--em); background: var(--em-bg); }
+    /* input caché qui reçoit la valeur du chip sélectionné */
+    #subjectValue { display: none; }
+
+    /* Bouton submit */
+    .btn-submit {
+      margin-top: 28px;
+      display: inline-flex; align-items: center; gap: 12px;
+      font-family: var(--mono); font-size: 12px; letter-spacing: .10em; text-transform: uppercase;
+      background: var(--em); color: #080f0c; font-weight: 600;
+      border: none; border-radius: 4px; padding: 16px 28px;
+      cursor: pointer;
+      transition: box-shadow .25s var(--ease), transform .2s var(--ease), opacity .2s;
+    }
+    .btn-submit:hover { box-shadow: 0 8px 40px rgba(45,212,160,.40); transform: translateY(-2px); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-submit svg { transition: transform .2s; }
+    .btn-submit:hover svg { transform: translateX(4px); }
+
+    /* Message de confirmation */
+    .form-success {
+      display: none;
+      margin-top: 24px;
+      padding: 18px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--em-line);
+      background: var(--em-bg);
+      font-size: 14px; color: var(--em); line-height: 1.6;
+      align-items: flex-start; gap: 12px;
+    }
+    .form-success.visible { display: flex; }
+    .form-success-icon { flex-shrink: 0; margin-top: 2px; }
+
+    /* ─── SIDEBAR INFOS ─── */
+    .contact-info-col {
+      padding: 72px 48px;
+      display: flex; flex-direction: column; gap: 48px;
+    }
+
+    .info-block {}
+    .info-label {
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .18em; text-transform: uppercase;
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .info-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line2), transparent); }
+
+    /* Lien e-mail */
+    .info-email {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 18px;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: var(--surface); text-decoration: none;
+      transition: border-color .2s, background .2s;
+      group: true;
+    }
+    .info-email:hover { border-color: var(--em-line); background: var(--bg2); }
+    .info-email-icon {
+      width: 38px; height: 38px; border-radius: 8px;
+      background: var(--em-bg); border: 1px solid var(--em-line);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      color: var(--em);
+    }
+    .info-email-text { font-size: 13px; color: var(--txt); }
+    .info-email-hint { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .06em; margin-top: 1px; }
+
+    /* Réseaux */
+    .social-list { display: flex; flex-direction: column; gap: 8px; }
+    .social-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 16px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: var(--surface); text-decoration: none;
+      transition: border-color .2s, background .2s;
+      color: var(--txt-mid);
+    }
+    .social-link:hover { border-color: var(--em-line); color: var(--txt); background: var(--bg2); }
+    .social-icon {
+      width: 32px; height: 32px; border-radius: 6px;
+      background: var(--bg2); border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .social-name { font-size: 13px; font-weight: 500; }
+    .social-handle { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .05em; }
+    .social-arrow { margin-left: auto; color: var(--txt-dim); transition: transform .2s, color .2s; }
+    .social-link:hover .social-arrow { transform: translateX(3px); color: var(--em); }
+
+    /* Disponibilité */
+    .availability-card {
+      padding: 18px 20px;
+      border: 1px solid var(--em-line); border-radius: 10px;
+      background: var(--em-bg);
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .avail-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--em);
+      flex-shrink: 0; margin-top: 5px;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(45,212,160,.5); } 70% { box-shadow: 0 0 0 6px rgba(45,212,160,0); } 100% { box-shadow: 0 0 0 0 rgba(45,212,160,0); } }
+    .avail-title { font-size: 13px; font-weight: 500; color: var(--em); margin-bottom: 3px; }
+    .avail-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* CV */
+    .cv-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: var(--surface); text-decoration: none;
+      transition: border-color .2s, background .2s;
+    }
+    .cv-card:hover { border-color: var(--em-line); background: var(--bg2); }
+    .cv-icon {
+      width: 38px; height: 38px; border-radius: 8px;
+      background: var(--bg2); border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: var(--txt-dim);
+    }
+    .cv-text { flex: 1; }
+    .cv-title { font-size: 13px; font-weight: 500; color: var(--txt); margin-bottom: 1px; }
+    .cv-hint { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .06em; }
+    .cv-arrow { color: var(--txt-dim); transition: transform .2s, color .2s; }
+    .cv-card:hover .cv-arrow { transform: translateX(3px); color: var(--em); }
+
+    /* ─── FOOTER ─── */
+    footer { padding: 22px 48px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .footer-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em; }
+    .footer-back { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); text-decoration: none; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+    .footer-back:hover { color: var(--em); }
+
+    /* ─── ANIMATIONS ─── */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .10s; }
+    .rd2 { transition-delay: .18s; }
+    .rd3 { transition-delay: .26s; }
+
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .contact-hero { padding: 108px 20px 56px; }
+      .contact-layout { grid-template-columns: 1fr; }
+      .contact-form-col { padding: 56px 20px; border-right: none; border-bottom: 1px solid var(--line); }
+      .form-grid { grid-template-columns: 1fr; }
+      .contact-info-col { padding: 48px 20px 56px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="index.html#projets">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <div class="contact-hero">
+    <div class="hero-blob"></div>
+    <div class="contact-tag">Contact</div>
+    <h1 class="contact-title">Parlons de<br>votre <em>projet.</em></h1>
+    <p class="contact-sub">
+      Une idée à automatiser, un besoin Power Platform, une opportunité —
+      je lis tous mes messages et je réponds sous 24h.
+    </p>
+  </div>
+
+  <!-- ══ LAYOUT ══ -->
+  <div class="contact-layout">
+
+    <!-- Formulaire -->
+    <div class="contact-form-col">
+
+      <div class="form-section-label reveal">Envoyer un message</div>
+
+      <form id="contactForm" novalidate class="reveal rd1">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="firstName">Prénom</label>
+            <input type="text" id="firstName" name="firstName" placeholder="Jean" autocomplete="given-name" />
+            <span class="field-error" id="firstNameErr">Champ requis</span>
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Nom</label>
+            <input type="text" id="lastName" name="lastName" placeholder="Dupont" autocomplete="family-name" />
+            <span class="field-error" id="lastNameErr">Champ requis</span>
+          </div>
+
+          <div class="form-group full">
+            <label for="email">Adresse e-mail</label>
+            <input type="email" id="email" name="email" placeholder="jean.dupont@entreprise.fr" autocomplete="email" />
+            <span class="field-error" id="emailErr">Adresse e-mail invalide</span>
+          </div>
+
+          <div class="form-group full">
+            <label for="company">Entreprise <span style="color:var(--txt-dim);font-size:8px;letter-spacing:.08em;">(optionnel)</span></label>
+            <input type="text" id="company" name="company" placeholder="Nom de votre entreprise" autocomplete="organization" />
+          </div>
+
+          <div class="form-group full">
+            <label>Sujet</label>
+            <div class="subject-chips">
+              <button type="button" class="chip selected" data-val="Projet Power Platform">Projet Power Platform</button>
+              <button type="button" class="chip" data-val="Automatisation">Automatisation</button>
+              <button type="button" class="chip" data-val="Opportunité professionnelle">Opportunité professionnelle</button>
+              <button type="button" class="chip" data-val="Autre">Autre</button>
+            </div>
+            <input type="hidden" id="subjectValue" name="subject" value="Projet Power Platform" />
+          </div>
+
+          <div class="form-group full">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="Décrivez votre projet, votre besoin ou votre question…"></textarea>
+            <span class="field-error" id="messageErr">Merci de saisir un message</span>
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+          Envoyer le message
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <div class="form-success" id="formSuccess">
+          <div class="form-success-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:4px;">Message envoyé !</div>
+            Je vous répondrai dans les 24h. En attendant, vous pouvez consulter mes <a href="projects.html" style="color:var(--em-dim);text-decoration:underline;">projets</a> ou mon <a href="cv.html" style="color:var(--em-dim);text-decoration:underline;">CV</a>.
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Infos -->
+    <aside class="contact-info-col">
+
+      <!-- Disponibilité -->
+      <div class="info-block reveal">
+        <div class="info-label">Disponibilité</div>
+        <div class="availability-card">
+          <div class="avail-dot"></div>
+          <div>
+            <div class="avail-title">Disponible pour de nouvelles missions</div>
+            <div class="avail-desc">Ouvert aux opportunités en Power Platform, automatisation ou développement d'applications métier. Basé à Nantes/Angers.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- E-mail direct -->
+      <div class="info-block reveal rd1">
+        <div class="info-label">Contact direct</div>
+        <a href="mailto:antoinebonnet54@gmail.com" class="info-email">
+          <div class="info-email-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <div>
+            <div class="info-email-text">antoinebonnet54@gmail.com</div>
+            <div class="info-email-hint">Réponse sous 24h</div>
+          </div>
+        </a>
+
+        <a href="tel:+33XXXXXXXXX" class="info-email" style="margin-top:8px;">
+          <div class="info-email-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.3 2 2 0 0 1 3.59 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="info-email-text">+33 6 36 01 99 68</div>
+            <div class="info-email-hint">Disponible en journée</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Réseaux -->
+      <div class="info-block reveal rd2">
+        <div class="info-label">Réseaux</div>
+        <div class="social-list">
+
+          <a href="https://www.linkedin.com/in/antoine-bonnet-668420267/" class="social-link" target="_blank" rel="noopener">
+            <div class="social-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color:var(--em)">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/>
+                <circle cx="4" cy="4" r="2"/>
+              </svg>
+            </div>
+            <div>
+              <div class="social-name">LinkedIn</div>
+              <div class="social-handle">antoine-bonnet-668420267</div>
+            </div>
+            <div class="social-arrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </div>
+          </a>
+
+          <a href="https://github.com/BonnetAntoine" class="social-link" target="_blank" rel="noopener">
+            <div class="social-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="color:var(--txt-mid)">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="social-name">GitHub</div>
+              <div class="social-handle">BonnetAntoine</div>
+            </div>
+            <div class="social-arrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- CV -->
+      <div class="info-block reveal rd2">
+        <div class="info-label">Document</div>
+        <a href="cv.html" class="cv-card">
+          <div class="cv-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <div class="cv-text">
+            <div class="cv-title">Curriculum Vitæ</div>
+            <div class="cv-hint">Voir le CV en ligne ou télécharger le PDF</div>
+          </div>
+          <div class="cv-arrow">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </a>
+      </div>
+
+    </aside>
+
+  </div><!-- /contact-layout -->
+
+  </main>
+
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <script>
+    /* ── Particules ── */
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const N = 120, D = 140, R = 120;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function init() {
+        particles = [];
+        for (let i = 0; i < N; i++)
+          particles.push({ x: Math.random()*W, y: Math.random()*H, vx: rand(-0.20,0.20), vy: rand(-0.16,0.16), r: rand(1.4,2.6), o: rand(0.5,0.9) });
+      }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        for (let i=0;i<particles.length;i++) for (let j=i+1;j<particles.length;j++) {
+          const a=particles[i],b=particles[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+          if(d<D){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(${EM},${(1-d/D)*0.20})`;ctx.lineWidth=0.8;ctx.stroke();}
+        }
+        particles.forEach(p => {
+          const mdx=mouse.x-p.x,mdy=mouse.y-p.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
+          if(md<R){const f=(1-md/R)*0.011;p.vx+=mdx*f;p.vy+=mdy*f;}
+          const s=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+          if(s<0.10){p.vx+=(Math.random()-.5)*.07;p.vy+=(Math.random()-.5)*.07;}
+          if(s>0.75){p.vx=p.vx/s*.75;p.vy=p.vy/s*.75;}
+          p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0){p.x=0;p.vx*=-1;}if(p.x>W){p.x=W;p.vx*=-1;}
+          if(p.y<0){p.y=0;p.vy*=-1;}if(p.y>H){p.y=H;p.vy*=-1;}
+          const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+          g.addColorStop(0,`rgba(${EM},${p.o*0.32})`);g.addColorStop(1,`rgba(${EM},0)`);
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r*4,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${EM},${p.o})`;ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mouse.x=e.clientX; mouse.y=e.clientY; });
+      resize(); init(); requestAnimationFrame(draw);
+    })();
+
+    /* ── Curseur ── */
+    const cursor = document.getElementById('cursor'), ring = document.getElementById('cursor-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+    (function tick(){ cursor.style.left=mx+'px'; cursor.style.top=my+'px'; rx+=(mx-rx)*0.13; ry+=(my-ry)*0.13; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(tick); })();
+
+    /* ── Reveal ── */
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if(!e.isIntersecting) return; e.target.classList.add('visible'); obs.unobserve(e.target); });
+    }, { threshold: 0.06 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    /* ── Chips sujet ── */
+    const chips = document.querySelectorAll('.chip');
+    const subjectInput = document.getElementById('subjectValue');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        subjectInput.value = chip.dataset.val;
+      });
+    });
+
+    /* ── Validation + submit ── */
+    const form    = document.getElementById('contactForm');
+    const btn     = document.getElementById('submitBtn');
+    const success = document.getElementById('formSuccess');
+
+    function validateField(input, errEl, check) {
+      const ok = check(input.value.trim());
+      input.classList.toggle('error', !ok);
+      errEl.classList.toggle('visible', !ok);
+      return ok;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const firstName = document.getElementById('firstName');
+      const lastName  = document.getElementById('lastName');
+      const email     = document.getElementById('email');
+      const message   = document.getElementById('message');
+
+      const v1 = validateField(firstName, document.getElementById('firstNameErr'),  v => v.length > 0);
+      const v2 = validateField(lastName,  document.getElementById('lastNameErr'),   v => v.length > 0);
+      const v3 = validateField(email,     document.getElementById('emailErr'),      v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+      const v4 = validateField(message,   document.getElementById('messageErr'),    v => v.length >= 10);
+
+      if (!v1 || !v2 || !v3 || !v4) return;
+
+      /* Envoi simulé — remplacer par fetch vers votre endpoint */
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours…';
+
+      await new Promise(r => setTimeout(r, 1200)); /* simulation réseau */
+
+      form.querySelectorAll('input:not([type=hidden]),textarea').forEach(el => el.value = '');
+      chips.forEach(c => c.classList.remove('selected'));
+      chips[0].classList.add('selected');
+      subjectInput.value = chips[0].dataset.val;
+      btn.style.display = 'none';
+      success.classList.add('visible');
+    });
+
+    /* Supprimer l'erreur au premier caractère saisi */
+    ['firstName','lastName','email','message'].forEach(id => {
+      document.getElementById(id).addEventListener('input', function() {
+        this.classList.remove('error');
+        document.getElementById(id + 'Err').classList.remove('visible');
+      });
+    });
+  </script>
+
+</body>
+</html>

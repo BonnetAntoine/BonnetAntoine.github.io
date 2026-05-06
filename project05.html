@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commande de vêtements de travail — Antoine Bonnet</title>
+  <meta name="description" content="Application Power Apps de commande de vêtements de travail logotés INEO — catalogue double interface mobile/PC, formulaires de commande, flux hebdomadaire automatisé vers les magasiniers." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-deep: #0d7a5a;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --line2:   rgba(45,212,160,0.16);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+
+      --mobile-accent: #a78bfa;
+      --mobile-line:   rgba(167,139,250,0.20);
+      --mobile-bg:     rgba(167,139,250,0.06);
+      --pc-accent:     #7dd3fc;
+      --pc-line:       rgba(125,211,252,0.20);
+      --pc-bg:         rgba(125,211,252,0.06);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--txt);
+      font-family: var(--sans); font-size: 16px;
+      line-height: 1.6; overflow-x: hidden; cursor: none;
+    }
+
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    /* ─── CURSEUR ─── */
+    #cursor { position: fixed; width: 8px; height: 8px; background: var(--em); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width .25s var(--ease), height .25s var(--ease); }
+    #cursor-ring { position: fixed; width: 32px; height: 32px; border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: width .3s var(--ease), height .3s var(--ease), opacity .2s; }
+    body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    /* ─── NAV ─── */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.88); backdrop-filter: blur(16px); }
+    .nav-logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--em); letter-spacing: .04em; text-decoration: none; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--txt-dim); text-decoration: none; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover { color: var(--txt); }
+    .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--em); text-decoration: none; text-transform: uppercase; border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px; background: var(--em-bg); transition: background .2s, border-color .2s; }
+    .nav-cta:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    /* ─── SUBNAV ─── */
+    .proj-subnav { position: fixed; top: 64px; left: 0; right: 0; z-index: 99; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 44px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.80); backdrop-filter: blur(12px); }
+    .proj-subnav-link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-dim); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color .2s; }
+    .proj-subnav-link:hover { color: var(--em); }
+    .proj-subnav-link svg { transition: transform .2s; }
+    .proj-subnav-link.prev:hover svg { transform: translateX(-3px); }
+    .proj-subnav-link.next:hover svg { transform: translateX(3px); }
+
+    /* ═══ HERO ═══ */
+    .proj-hero { min-height: 78vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 108px 48px 96px; position: relative; border-bottom: 1px solid var(--line); } 
+    .hero-bg-num { position: absolute; right: 48px; bottom: 40px; font-family: var(--serif); font-size: 30vw; line-height: 1; color: rgba(45,212,160,0.025); letter-spacing: -.05em; pointer-events: none; user-select: none; }
+    .proj-hero-breadcrumb { font-family: var(--mono); font-size: 11px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 36px; animation: fadeUp .8s var(--ease) both; }
+    .proj-hero-breadcrumb a { color: var(--txt-dim); text-decoration: none; transition: color .2s; }
+    .proj-hero-breadcrumb a:hover { color: var(--em); }
+    .proj-hero-breadcrumb span { color: var(--em); }
+    .proj-hero-title { font-family: var(--serif); font-size: clamp(48px, 7.5vw, 100px); line-height: 1.3; letter-spacing: -.03em; color: var(--txt); margin-bottom: 36px; animation: fadeUp .8s .08s var(--ease) both; }
+    .proj-hero-title em { font-style: italic; display: block; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; padding-right: 6px; }
+    .proj-hero-meta { display: flex; align-items: stretch; gap: 0; border-top: 1px solid var(--line); padding-top: 28px; animation: fadeUp .8s .18s var(--ease) both; }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; padding-right: 40px; margin-right: 40px; border-right: 1px solid var(--line); }
+    .meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .meta-key { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .14em; text-transform: uppercase; }
+    .meta-val { font-size: 14px; color: var(--txt); font-weight: 500; }
+    .meta-val-em { color: var(--em); font-family: var(--mono); font-size: 13px; }
+    .proj-hero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; align-items: flex-end; }
+    .ptag { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--em-line); border-radius: 20px; color: var(--em-dim); background: var(--em-bg); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+    /* ═══ DOUBLE INTERFACE ═══ */
+    .interfaces-section {
+      border-bottom: 1px solid var(--line);
+      padding: 80px 48px;
+    }
+    .interfaces-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 40px;
+    }
+    .interface-card {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      overflow: hidden;
+      transition: border-color .25s;
+    }
+    .interface-card.mobile { border-color: var(--mobile-line); }
+    .interface-card.pc     { border-color: var(--pc-line); }
+
+    .interface-card-head {
+      padding: 22px 26px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .interface-card.mobile .interface-card-head { border-bottom-color: var(--mobile-line); background: var(--mobile-bg); }
+    .interface-card.pc     .interface-card-head { border-bottom-color: var(--pc-line);     background: var(--pc-bg); }
+
+    .interface-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .interface-card.mobile .interface-icon { background: rgba(167,139,250,0.12); }
+    .interface-card.pc     .interface-icon { background: rgba(125,211,252,0.12); }
+    .interface-card.mobile .interface-icon svg { color: var(--mobile-accent); }
+    .interface-card.pc     .interface-icon svg { color: var(--pc-accent); }
+
+    .interface-name {
+      font-family: var(--serif); font-size: 20px; letter-spacing: -.01em;
+    }
+    .interface-card.mobile .interface-name { color: var(--mobile-accent); }
+    .interface-card.pc     .interface-name { color: var(--pc-accent); }
+    .interface-subtitle {
+      font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+      text-transform: uppercase; margin-top: 2px;
+    }
+    .interface-card.mobile .interface-subtitle { color: rgba(167,139,250,0.6); }
+    .interface-card.pc     .interface-subtitle { color: rgba(125,211,252,0.6); }
+
+    .interface-body { padding: 22px 26px 26px; }
+    .interface-desc { font-size: 13px; color: var(--txt-mid); line-height: 1.7; margin-bottom: 18px; }
+
+    .interface-features { display: flex; flex-direction: column; gap: 8px; }
+    .interface-feat {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: var(--txt-mid); line-height: 1.4;
+    }
+    .interface-feat-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 6px;
+    }
+    .interface-card.mobile .interface-feat-dot { background: var(--mobile-accent); }
+    .interface-card.pc     .interface-feat-dot { background: var(--pc-accent); }
+
+    /* ═══ FLUX VENDREDI — PIPELINE VISUEL ═══ */
+    .pipeline-section {
+      border-bottom: 1px solid var(--line);
+      padding: 80px 48px;
+    }
+
+    .pipeline {
+      margin-top: 44px;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      position: relative;
+    }
+
+    .pipeline-step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Connecteur entre steps */
+    .pipeline-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 28px;
+      right: -1px;
+      width: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--em-line), transparent);
+      z-index: 0;
+    }
+    .pipeline-step:not(:first-child)::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: -1px;
+      width: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--em-line));
+      z-index: 0;
+    }
+
+    .pipeline-node {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--em-line);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1; flex-shrink: 0;
+      transition: border-color .25s;
+    }
+    .pipeline-node svg { color: var(--em); }
+    .pipeline-step.trigger .pipeline-node { border-color: var(--em); box-shadow: 0 0 0 6px rgba(45,212,160,0.07); }
+
+    .pipeline-label {
+      font-size: 13px; font-weight: 500; color: var(--txt);
+      margin-top: 16px; line-height: 1.3;
+    }
+    .pipeline-sub {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim);
+      letter-spacing: .08em; text-transform: uppercase;
+      margin-top: 5px; line-height: 1.4;
+    }
+    .pipeline-step.trigger .pipeline-label { color: var(--em); }
+
+    /* Badge "Chaque vendredi 11h" */
+    .pipeline-trigger-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 9px; letter-spacing: .10em;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+      background: var(--em-bg); color: var(--em); border: 1px solid var(--em-line);
+      margin-top: 8px;
+    }
+    .trigger-pulse {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--em);
+      animation: statusPulse 2.5s ease-in-out infinite; flex-shrink: 0;
+    }
+    @keyframes statusPulse {
+      0%  { box-shadow: 0 0 0 0   rgba(45,212,160,.5); }
+      70% { box-shadow: 0 0 0 5px rgba(45,212,160,0); }
+      100%{ box-shadow: 0 0 0 0   rgba(45,212,160,0); }
+    }
+
+    /* ═══ TEMPLATE EMAIL CARD ═══ */
+    .email-card {
+      margin-top: 28px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .email-card-bar {
+      padding: 14px 20px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .email-card-title {
+      font-family: var(--mono); font-size: 10px; color: var(--em);
+      letter-spacing: .12em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .email-card-meta {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .06em;
+    }
+    .email-preview {
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .email-field {
+      display: flex; gap: 12px; align-items: baseline;
+    }
+    .email-field-key {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim);
+      letter-spacing: .10em; text-transform: uppercase;
+      min-width: 60px; flex-shrink: 0;
+    }
+    .email-field-val {
+      font-size: 13px; color: var(--txt-mid);
+    }
+    .email-field-val strong { color: var(--txt); }
+    .email-divider { height: 1px; background: var(--line); }
+    .email-body-preview {
+      font-size: 12px; color: var(--txt-dim); line-height: 1.7;
+      font-style: italic;
+    }
+    .email-body-preview span { color: var(--em); font-style: normal; }
+
+    /* ═══ CONTENU PRINCIPAL ═══ */
+    .proj-content { display: grid; grid-template-columns: 1fr 320px; gap: 0; border-bottom: 1px solid var(--line); }
+    .proj-main { padding: 96px 80px 96px 48px; border-right: 1px solid var(--line); }
+    .proj-section { margin-bottom: 72px; }
+    .proj-section:last-child { margin-bottom: 0; }
+    .proj-section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .proj-section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .proj-section-title { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 24px; }
+    .proj-section-body { font-size: 15px; color: var(--txt-mid); line-height: 1.85; }
+    .proj-section-body p + p { margin-top: 16px; }
+    .proj-section-body strong { color: var(--txt); font-weight: 500; }
+
+    /* Timeline */
+    .proj-timeline { list-style: none; margin-top: 24px; }
+    .ptl-item { display: grid; grid-template-columns: 28px 1fr; gap: 16px; padding-bottom: 36px; position: relative; }
+    .ptl-item:last-child { padding-bottom: 0; }
+    .ptl-item::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 1px; background: linear-gradient(180deg, var(--em-dim), transparent); }
+    .ptl-item:last-child::before { display: none; }
+    .ptl-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--em); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 0 4px rgba(45,212,160,0.08); }
+    .ptl-dot svg { width: 12px; height: 12px; color: var(--em); }
+    .ptl-step { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+    .ptl-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 6px; }
+    .ptl-desc  { font-size: 14px; color: var(--txt-mid); line-height: 1.7; }
+
+    /* Fonctionnalités */
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .feat-item { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); transition: background .25s; }
+    .feat-item:last-child { border-bottom: none; }
+    .feat-item:hover { background: var(--bg2); }
+    .feat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--em); flex-shrink: 0; margin-top: 7px; }
+    .feat-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .feat-desc  { font-size: 13px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* ─── Sidebar ─── */
+    .proj-sidebar { padding: 96px 48px; display: flex; flex-direction: column; gap: 48px; }
+    .sidebar-block {}
+    .sidebar-label { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line2), transparent); }
+    .stack-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .stack-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; transition: border-color .2s; }
+    .stack-item:hover { border-color: var(--em-line); }
+    .stack-name { font-size: 13px; color: var(--txt); font-weight: 500; }
+    .stack-role { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 16px; position: relative; overflow: hidden; }
+    .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--em), transparent); }
+    .metric-num { font-family: var(--serif); font-size: 32px; line-height: 1; letter-spacing: -.02em; color: var(--txt); }
+    .metric-num em { font-style: normal; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .metric-label { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; }
+    .proj-status { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: rgba(45,212,160,0.06); border: 1px solid rgba(45,212,160,0.2); border-radius: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--em); flex-shrink: 0; animation: statusPulse 2.5s ease-in-out infinite; }
+    .status-text { font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .06em; }
+
+    /* ─── FOOTER ─── */
+    footer { padding: 22px 48px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .footer-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em; }
+    .footer-back { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); text-decoration: none; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+    .footer-back:hover { color: var(--em); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .1s; }
+    .rd2 { transition-delay: .2s; }
+
+    /* ═══ SLIDER INTERACTIF ═══ */
+    .screens-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+    .screens-header { margin-bottom: 36px; }
+
+    /* ── Vue 1 : accueil commun ── */
+    .screen-home-wrap {
+      border-radius: 12px; border: 1px solid var(--line);
+      background: var(--bg2); overflow: hidden; margin-bottom: 28px;
+    }
+    .screen-home-wrap img {
+      width: 100%; height: 420px; display: block;
+      object-fit: contain; object-position: center;
+      background: var(--bg2);
+    }
+    .screen-home-caption {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px 22px; background: var(--surface);
+      border-top: 1px solid var(--line);
+    }
+    .screen-home-num { font-family: var(--mono); font-size: 10px; color: var(--em); letter-spacing: .14em; flex-shrink: 0; margin-top: 2px; }
+    .screen-home-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .screen-home-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* ── Sélecteur bureau / téléphone ── */
+    .screen-selector {
+      display: flex; gap: 12px; margin-bottom: 24px;
+    }
+    .screen-sel-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 20px; border-radius: 10px;
+      border: 1.5px solid var(--line); background: var(--surface);
+      font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--txt-dim); cursor: pointer;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .screen-sel-btn:hover { border-color: var(--em-line); color: var(--txt); }
+    .screen-sel-btn.active {
+      border-color: var(--em); color: var(--em);
+      background: var(--em-bg);
+    }
+    .screen-sel-btn svg { flex-shrink: 0; }
+
+    /* ── Slider (bureau ou tel) ── */
+    .screen-panel { display: none; }
+    .screen-panel.active { display: block; }
+
+    /* Cadre slider */
+    .screens-slider-wrap {
+      position: relative; border-radius: 12px;
+      border: 1px solid var(--line); background: var(--bg2); overflow: hidden;
+    }
+    .screens-track {
+      display: flex;
+      transition: transform .55s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+    .screen-slide { flex: 0 0 100%; display: flex; flex-direction: column; }
+
+    /* Image bureau — landscape contain */
+    .screen-slide.bureau img {
+      width: 100%; height: 420px; display: block;
+      object-fit: contain; object-position: center;
+      background: var(--bg2); border-bottom: 1px solid var(--line);
+    }
+
+    /* Image téléphone — portrait, plus haute */
+    .screen-slide.tel img {
+      width: 100%; height: 520px; display: block;
+      object-fit: contain; object-position: center;
+      background: var(--bg2); border-bottom: 1px solid var(--line);
+    }
+
+    .screen-caption {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 16px 22px; background: var(--surface);
+    }
+    .screen-num { font-family: var(--mono); font-size: 10px; color: var(--em); letter-spacing: .14em; flex-shrink: 0; margin-top: 2px; }
+    .screen-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .screen-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* Boutons nav */
+    .screen-btn {
+      position: absolute; top: 210px; transform: translateY(-50%);
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1px solid var(--em-line); background: rgba(8,15,12,0.82);
+      backdrop-filter: blur(8px); color: var(--txt);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .2s, border-color .2s, color .2s; z-index: 2;
+    }
+    .screen-btn:hover { background: var(--em-bg); border-color: var(--em); color: var(--em); }
+    .screen-prev { left: 14px; }
+    .screen-next { right: 14px; }
+    .screen-panel.tel-panel .screen-btn { top: 260px; }
+
+    /* Dots */
+    .screen-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }
+    .screen-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--txt-dim); cursor: pointer; transition: background .2s, transform .2s; }
+    .screen-dot.active { background: var(--em); transform: scale(1.4); }
+
+    @media (max-width: 900px) {
+      .screens-section { padding: 48px 20px; }
+      .screen-home-wrap img { height: 220px; }
+      .screen-slide.bureau img { height: 220px; }
+      .screen-slide.tel img { height: 340px; }
+      .screen-btn { top: 110px; }
+      .screen-panel.tel-panel .screen-btn { top: 170px; }
+    }
+
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .proj-hero { padding-left: 20px; padding-right: 20px; }
+      .proj-hero-meta { flex-wrap: wrap; gap: 20px; }
+      .meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+      .proj-hero-tags { margin-left: 0; margin-top: 16px; }
+      .interfaces-section, .pipeline-section { padding: 48px 20px; }
+      .interfaces-grid { grid-template-columns: 1fr; }
+      .pipeline { flex-direction: column; gap: 24px; }
+      .pipeline-step::before, .pipeline-step::after { display: none; }
+      .proj-content { grid-template-columns: 1fr; }
+      .proj-main { padding: 60px 20px; border-right: none; }
+      .proj-sidebar { padding: 0 20px 60px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="projects.html">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <div class="proj-subnav">
+    <a href="project04.html" class="proj-subnav-link prev">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M6 2L1 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Projet précédent — Gestion de l'astreinte
+    </a>
+    <a href="project06.html" class="proj-subnav-link next">
+      Projet suivant — Notes de modification horaire
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <!-- ══ HERO ══ -->
+  <div class="proj-hero">
+    
+    
+
+    <div class="proj-hero-breadcrumb">
+      <a href="index.html">Accueil</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <a href="index.html">Projets</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Commande de vêtements de travail</span>
+    </div>
+
+    <h1 class="proj-hero-title">
+      Vêtements<br><em>de travail</em>
+    </h1>
+
+    <div class="proj-hero-meta">
+      <div class="meta-item">
+        <span class="meta-key">Contexte</span>
+        <span class="meta-val">INEO Atlantique Services</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Période</span>
+        <span class="meta-val">2024 → En production</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Rôle</span>
+        <span class="meta-val">Développeur seul</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Statut</span>
+        <span class="meta-val meta-val-em">● Déployé</span>
+      </div>
+      <div class="proj-hero-tags">
+        <span class="ptag">Power Apps</span>
+        <span class="ptag">Power Automate</span>
+        <span class="ptag">Lists Microsoft</span>
+        <span class="ptag">Outlook</span>
+        <span class="ptag">HTML / CSS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDER INTERACTIF ══ -->
+  <section class="screens-section reveal">
+    <div class="screens-header">
+      <div class="proj-section-tag">Aperçu de l'application</div>
+      <h2 class="proj-section-title" style="margin-bottom:6px;">L'interface en images</h2>
+      <p style="font-size:14px;color:var(--txt-mid);">Captures réelles — interface bureau et mobile Power Apps.</p>
+    </div>
+
+    <!-- Écran d'accueil commun -->
+    <div class="screen-home-wrap">
+      <img src="image/Home_vet.png" alt="Écran d'accueil — Dotation vêtements de travail" />
+      <div class="screen-home-caption">
+        <span class="screen-home-num">00</span>
+        <div>
+          <div class="screen-home-title">Écran d'accueil — commun aux deux interfaces</div>
+          <div class="screen-home-desc">Sélection de la dotation (bureaux ou techniciens), accès à l'historique des commandes et au guide des tailles. Point d'entrée identique sur toutes les plateformes.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sélecteur d'interface -->
+    <div class="screen-selector">
+      <button class="screen-sel-btn" id="selBureau" data-panel="bureau-panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Interface bureau
+      </button>
+      <button class="screen-sel-btn" id="selTel" data-panel="tel-panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        Interface mobile
+      </button>
+    </div>
+
+    <!-- Slider Bureau -->
+    <div class="screen-panel bureau-panel" id="bureau-panel">
+      <div class="screens-slider-wrap">
+        <div class="screens-track" id="trackBureau">
+
+          <div class="screen-slide bureau">
+            <img src="image/form1_vet_b.png" alt="Formulaire 1 — bureau" />
+            <div class="screen-caption">
+              <span class="screen-num">01</span>
+              <div>
+                <div class="screen-title">Formulaire 1 — Informations collaborateur</div>
+                <div class="screen-desc">Saisie du nom, de la date, de l'agence, du genre et des tailles (veste, pantalon, entrejambe) avec accès aux champs EPI multirisque et combinaison.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen-slide bureau">
+            <img src="image/form2_vetb.png" alt="Formulaire 2 — bureau" />
+            <div class="screen-caption">
+              <span class="screen-num">02</span>
+              <div>
+                <div class="screen-title">Formulaire 2 — Catalogue vêtements</div>
+                <div class="screen-desc">Sélection des articles logotés INEO (T-shirts, polos, sweat, sac…) avec leur coût en points et saisie des quantités. Solde de points affiché en temps réel.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <button class="screen-btn screen-prev" id="prevBureau" aria-label="Précédent">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="screen-btn screen-next" id="nextBureau" aria-label="Suivant">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="screen-dots" id="dotsBureau">
+        <div class="screen-dot active"></div>
+        <div class="screen-dot"></div>
+      </div>
+    </div>
+
+    <!-- Slider Téléphone -->
+    <div class="screen-panel tel-panel" id="tel-panel">
+      <div class="screens-slider-wrap">
+        <div class="screens-track" id="trackTel">
+
+          <div class="screen-slide tel">
+            <img src="image/form1_vet_t.png" alt="Formulaire 1 — mobile" />
+            <div class="screen-caption">
+              <span class="screen-num">01</span>
+              <div>
+                <div class="screen-title">Formulaire 1 — Version mobile</div>
+                <div class="screen-desc">Même contenu que la version bureau adapté au format portrait — champs empilés, navigation tactile, boutons Retour / Étape suivante accessibles en bas d'écran.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen-slide tel">
+            <img src="image/form2_vet_t.png" alt="Formulaire 2 — mobile" />
+            <div class="screen-caption">
+              <span class="screen-num">02</span>
+              <div>
+                <div class="screen-title">Formulaire 2 — Version mobile</div>
+                <div class="screen-desc">Catalogue vêtements en liste verticale scrollable avec sélection de taille globale, quantités par article et solde de points visible en en-tête.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <button class="screen-btn screen-prev" id="prevTel" aria-label="Précédent">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="screen-btn screen-next" id="nextTel" aria-label="Suivant">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="screen-dots" id="dotsTel">
+        <div class="screen-dot active"></div>
+        <div class="screen-dot"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══ DOUBLE INTERFACE ══ -->
+  <section class="interfaces-section reveal">
+    <div class="proj-section-tag">Conception</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(24px,3vw,36px);line-height:1.05;letter-spacing:-.02em;color:var(--txt);margin-bottom:8px;">Une application, deux interfaces</h2>
+    <p style="font-size:15px;color:var(--txt-mid);line-height:1.8;max-width:680px;">
+      L'application est conçue pour s'adapter au contexte d'utilisation — terrain ou bureau —
+      avec une version <strong style="color:var(--mobile-accent)">mobile</strong> optimisée pour les techniciens
+      et une version <strong style="color:var(--pc-accent)">PC</strong> destinée aux responsables et aux services RH.
+      Les deux partagent la même logique et la même base de données.
+    </p>
+
+    <div class="interfaces-grid">
+
+      <div class="interface-card mobile">
+        <div class="interface-card-head">
+          <div class="interface-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
+          <div>
+            <div class="interface-name">Mobile</div>
+            <div class="interface-subtitle">Techniciens terrain</div>
+          </div>
+        </div>
+        <div class="interface-body">
+          <div class="interface-desc">Interface épurée, navigation tactile, formulaires pensés pour une saisie rapide depuis le terrain — même sans connexion stable.</div>
+          <div class="interface-features">
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Catalogue vêtements logotés INEO adapté au format mobile</div>
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Deux formulaires de commande clairs et guidés</div>
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Saisie des tailles, quantités et références</div>
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Envoi en base en un tap</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="interface-card pc">
+        <div class="interface-card-head">
+          <div class="interface-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div>
+            <div class="interface-name">PC</div>
+            <div class="interface-subtitle">Responsables & bureau</div>
+          </div>
+        </div>
+        <div class="interface-body">
+          <div class="interface-desc">Interface enrichie avec vue catalogue complète, accès à l'historique des commandes et vue d'ensemble des demandes de l'équipe.</div>
+          <div class="interface-features">
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Catalogue complet avec visuels des vêtements disponibles</div>
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Deux formulaires de commande avec champs détaillés</div>
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Vue de l'historique des demandes par collaborateur</div>
+            <div class="interface-feat"><div class="interface-feat-dot"></div>Accès aux statuts de transmission aux magasiniers</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ PIPELINE VENDREDI ══ -->
+  <section class="pipeline-section reveal">
+    <div class="proj-section-tag">Automatisation</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(24px,3vw,36px);line-height:1.05;letter-spacing:-.02em;color:var(--txt);margin-bottom:8px;">Le flux du vendredi à 11h</h2>
+    <p style="font-size:15px;color:var(--txt-mid);line-height:1.8;max-width:680px;margin-bottom:0;">
+      Chaque semaine, un flux Power Automate programmé se déclenche automatiquement.
+      Il agrège toutes les demandes non encore transmises et envoie un e-mail structuré
+      aux magasiniers avec un template HTML mis en forme dans Outlook.
+    </p>
+
+    <div class="pipeline">
+
+      <div class="pipeline-step trigger">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="pipeline-label">Déclenchement</div>
+        <div class="pipeline-sub">Planifié</div>
+        <div class="pipeline-trigger-badge">
+          <div class="trigger-pulse"></div>
+          Vendredi — 11h00
+        </div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
+          </svg>
+        </div>
+        <div class="pipeline-label">Lecture Lists</div>
+        <div class="pipeline-sub">Demandes non transmises</div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <div class="pipeline-label">Génération e-mail</div>
+        <div class="pipeline-sub">Template HTML Outlook</div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div class="pipeline-label">Envoi aux magasiniers</div>
+        <div class="pipeline-sub">Via Outlook</div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <div class="pipeline-label">Marquage transmis</div>
+        <div class="pipeline-sub">Mise à jour Lists</div>
+      </div>
+
+    </div>
+
+    <!-- Aperçu de l'e-mail -->
+    <div class="email-card" style="margin-top:40px;">
+      <div class="email-card-bar">
+        <div class="email-card-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Aperçu du template e-mail
+        </div>
+        <div class="email-card-meta">Template HTML — Outlook</div>
+      </div>
+      <div class="email-preview">
+        <div class="email-field">
+          <span class="email-field-key">De</span>
+          <span class="email-field-val">Power Automate — <strong>INEO Atlantique</strong></span>
+        </div>
+        <div class="email-field">
+          <span class="email-field-key">À</span>
+          <span class="email-field-val"><strong>Magasiniers</strong> — Service logistique</span>
+        </div>
+        <div class="email-field">
+          <span class="email-field-key">Objet</span>
+          <span class="email-field-val"><strong>Commandes vêtements de travail — Semaine XX</strong></span>
+        </div>
+        <div class="email-divider"></div>
+        <div class="email-body-preview">
+          Bonjour, veuillez trouver ci-dessous les demandes de vêtements de travail reçues cette semaine.
+          Ces articles sont à intégrer à la prochaine commande fournisseur.
+          <br><br>
+          <span>→ Liste structurée des articles, tailles et quantités par collaborateur</span>
+          <br>
+          <span>→ Mise en forme tabulaire HTML pour lecture directe dans Outlook</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CONTENU + SIDEBAR ══ -->
+  <div class="proj-content">
+    <div class="proj-main">
+
+      <!-- Contexte -->
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Contexte</div>
+        <h2 class="proj-section-title">Digitaliser la commande d'équipements</h2>
+        <div class="proj-section-body">
+          <p>
+            Chaque collaborateur d'INEO Atlantique dispose d'une dotation de vêtements de travail
+            logotés : tenues de chantier, EPI vestimentaires, vêtements haute visibilité.
+            Avant cette application, les demandes transitaient par e-mail ou à l'oral,
+            sans traçabilité et sans consolidation structurée pour les magasiniers.
+          </p>
+          <p>
+            L'objectif était de créer un <strong>catalogue digital directement dans Power Apps</strong>
+            permettant à chaque collaborateur de formuler ses besoins de façon autonome,
+            et d'automatiser entièrement la remontée vers le service logistique chaque semaine.
+          </p>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnement</div>
+        <h2 class="proj-section-title">Du catalogue à la commande</h2>
+        <ol class="proj-timeline">
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">Étape 01</div>
+              <div class="ptl-title">Consultation du catalogue</div>
+              <div class="ptl-desc">Le collaborateur parcourt le catalogue de vêtements de travail logotés INEO directement dans l'application — tenues de chantier, vêtements haute visibilité, sous-vêtements techniques. Chaque article est présenté avec ses caractéristiques et les tailles disponibles.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">Étape 02</div>
+              <div class="ptl-title">Remplissage des deux formulaires</div>
+              <div class="ptl-desc">Deux formulaires distincts structurent la commande selon les catégories de vêtements. Le collaborateur renseigne les articles souhaités, les quantités et ses mensurations. La logique PowerFX guide la saisie et évite les erreurs de référence.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/>
+                <path d="M3 12a9 3 0 0 0 18 0"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">Étape 03</div>
+              <div class="ptl-title">Enregistrement en base de données</div>
+              <div class="ptl-desc">À la validation, les données sont envoyées dans une Lists Microsoft dédiée. Chaque demande est horodatée, associée au collaborateur et marquée "non transmise" — en attente du prochain passage du flux hebdomadaire.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">Étape 04 — Chaque vendredi à 11h</div>
+              <div class="ptl-title">Flux Power Automate programmé</div>
+              <div class="ptl-desc">Le flux récupère toutes les demandes non encore transmises depuis Lists Microsoft, génère un e-mail avec un template HTML structuré et l'envoie aux magasiniers via Outlook. Une fois l'envoi confirmé, le flux marque chaque demande comme transmise dans la base.</div>
+            </div>
+          </li>
+
+        </ol>
+      </div>
+
+      <!-- Fonctionnalités -->
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnalités</div>
+        <h2 class="proj-section-title">Ce que l'application apporte</h2>
+        <ul class="feat-list">
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Catalogue digital des vêtements logotés INEO</div>
+              <div class="feat-desc">Tous les articles disponibles — tenues de chantier, EPI vestimentaires, vêtements haute visibilité — accessibles et commandables directement depuis l'application.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Double interface mobile &amp; PC</div>
+              <div class="feat-desc">Une expérience adaptée au contexte : version mobile compacte pour les techniciens terrain, version PC enrichie pour les responsables et les services bureau.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Deux formulaires de commande structurés</div>
+              <div class="feat-desc">La commande est répartie en deux formulaires par catégorie de vêtement, guidés par la logique PowerFX pour éviter les oublis et les erreurs de saisie.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Collecte centralisée dans Lists Microsoft</div>
+              <div class="feat-desc">Toutes les demandes sont enregistrées dans une liste Microsoft avec statut de transmission, horodatage et identité du demandeur — une traçabilité complète et durable.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Flux hebdomadaire automatisé — vendredi 11h</div>
+              <div class="feat-desc">Zéro action manuelle : Power Automate agrège et transmet chaque semaine les nouvelles demandes aux magasiniers, avec marquage automatique des éléments traités.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Template HTML dans Outlook</div>
+              <div class="feat-desc">L'e-mail envoyé aux magasiniers est mis en forme avec un template HTML intégré à Outlook — lisible, structuré et directement exploitable pour préparer la commande fournisseur.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div><!-- /proj-main -->
+
+    <aside class="proj-sidebar">
+
+      <div class="sidebar-block reveal">
+        <div class="sidebar-label">Statut</div>
+        <div class="proj-status">
+          <div class="status-dot"></div>
+          <span class="status-text">En production — INEO Atlantique</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Chiffres clés</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-num">2</div>
+            <div class="metric-label">Interfaces</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">2</div>
+            <div class="metric-label">Formulaires</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">1<em>/sem</em></div>
+            <div class="metric-label">Flux automatisé</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">0</div>
+            <div class="metric-label">Action manuelle</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Stack technique</div>
+        <ul class="stack-list">
+          <li class="stack-item">
+            <span class="stack-name">Power Apps</span>
+            <span class="stack-role">Frontend</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Power Automate</span>
+            <span class="stack-role">Flux programmé</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Lists Microsoft</span>
+            <span class="stack-role">Base de données</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Outlook</span>
+            <span class="stack-role">Envoi e-mail</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">HTML / CSS</span>
+            <span class="stack-role">Template e-mail</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">PowerFX</span>
+            <span class="stack-role">Logique métier</span>
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </div><!-- /proj-content -->
+
+  </main>
+
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const PARTICLE_COUNT = 150, CONNECTION_DIST = 150, MOUSE_RADIUS = 130;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function createParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++)
+          particles.push({ x: Math.random()*W, y: Math.random()*H, vx: rand(-0.22,0.22), vy: rand(-0.18,0.18), r: rand(1.5,2.8), opacity: rand(0.55,0.95) });
+      }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        for (let i=0;i<particles.length;i++) for (let j=i+1;j<particles.length;j++) {
+          const a=particles[i],b=particles[j],dx=a.x-b.x,dy=a.y-b.y,dist=Math.sqrt(dx*dx+dy*dy);
+          if(dist<CONNECTION_DIST){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(${EM},${(1-dist/CONNECTION_DIST)*0.22})`;ctx.lineWidth=0.8;ctx.stroke();}
+        }
+        particles.forEach(p => {
+          const mdx=mouse.x-p.x,mdy=mouse.y-p.y,mdist=Math.sqrt(mdx*mdx+mdy*mdy);
+          if(mdist<MOUSE_RADIUS){const f=(1-mdist/MOUSE_RADIUS)*0.012;p.vx+=mdx*f;p.vy+=mdy*f;}
+          const spd=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+          if(spd<0.12){p.vx+=(Math.random()-.5)*.08;p.vy+=(Math.random()-.5)*.08;}
+          if(spd>0.8){p.vx=p.vx/spd*.8;p.vy=p.vy/spd*.8;}
+          p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0){p.x=0;p.vx*=-1;}if(p.x>W){p.x=W;p.vx*=-1;}
+          if(p.y<0){p.y=0;p.vy*=-1;}if(p.y>H){p.y=H;p.vy*=-1;}
+          const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+          glow.addColorStop(0,`rgba(${EM},${p.opacity*0.35})`);glow.addColorStop(1,`rgba(${EM},0)`);
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r*4,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${EM},${p.opacity})`;ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize',resize);
+      window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+      resize();createParticles();requestAnimationFrame(draw);
+    })();
+
+    const cursor=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+    (function tick(){cursor.style.left=mx+'px';cursor.style.top=my+'px';rx+=(mx-rx)*0.13;ry+=(my-ry)*0.13;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(tick);})();
+
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add('visible');obs.unobserve(e.target);});},{threshold:0.08});
+    document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+    /* ── Slider interactif vêtements ── */
+    (function() {
+      // Sélecteur bureau / téléphone
+      const selBtns  = document.querySelectorAll('.screen-sel-btn');
+      const panels   = document.querySelectorAll('.screen-panel');
+
+      selBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.panel;
+          selBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          panels.forEach(p => {
+            p.classList.toggle('active', p.id === target);
+          });
+        });
+      });
+
+      // Fabrique un slider pour un panel donné
+      function makeSlider(trackId, prevId, nextId, dotsId) {
+        const track  = document.getElementById(trackId);
+        const prev   = document.getElementById(prevId);
+        const next   = document.getElementById(nextId);
+        const dots   = document.querySelectorAll('#' + dotsId + ' .screen-dot');
+        if (!track) return;
+        const total  = track.querySelectorAll('.screen-slide').length;
+        let current  = 0;
+
+        function goTo(n) {
+          current = (n + total) % total;
+          track.style.transform = 'translateX(-' + (current * 100) + '%)';
+          dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        }
+
+        prev.addEventListener('click', () => goTo(current - 1));
+        next.addEventListener('click', () => goTo(current + 1));
+        dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+
+        let startX = 0;
+        track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend',   e => {
+          const dx = e.changedTouches[0].clientX - startX;
+          if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1));
+        });
+      }
+
+      makeSlider('trackBureau', 'prevBureau', 'nextBureau', 'dotsBureau');
+      makeSlider('trackTel',    'prevTel',    'nextTel',    'dotsTel');
+    })();
+
+  </script>
+
+</body>
+</html>

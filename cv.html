@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CV — Antoine Bonnet</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080f0c;
+      --accent: #2dd4a0;
+      --accent2: #1aaf82;
+      --surface: #0e1a16;
+      --surface2: #142318;
+      --border: #1f3329;
+      --text: #e8f5f0;
+      --muted: #6b9e88;
+      --white: #ffffff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    /* NAV */
+    .nav {
+      width: 100%;
+      max-width: 210mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      margin-bottom: 1.5rem;
+    }
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-btn {
+      border: 1px solid var(--accent);
+      color: var(--accent) !important;
+      padding: 0.35rem 1rem;
+      border-radius: 4px;
+      transition: background 0.2s !important;
+    }
+    .nav-btn:hover { background: rgba(45,212,160,0.1) !important; }
+
+    /* PDF BUTTON */
+    .pdf-btn-wrap {
+      width: 100%;
+      max-width: 210mm;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+    }
+    .pdf-btn {
+      background: var(--accent);
+      color: #080f0c;
+      border: none;
+      padding: 0.55rem 1.4rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .pdf-btn:hover { background: var(--accent2); }
+
+    /* CV PAGE A4 */
+    .cv-page {
+      width: 210mm;
+      min-height: 297mm;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    .cv-header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 1.6rem 2rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    .cv-photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      object-fit: cover;
+      object-position: center top;
+      flex-shrink: 0;
+    }
+    .cv-header-info { flex: 1; }
+    .cv-name {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .cv-title {
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+      margin-bottom: 0.6rem;
+    }
+    .cv-contacts { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; }
+    .cv-contact {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .cv-contact span { color: var(--accent); margin-right: 0.3rem; }
+    .cv-contact a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .cv-contact a:hover { color: var(--accent); }
+
+    /* ACCROCHE */
+    .cv-accroche {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.3rem 1.6rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      line-height: 1;
+    }
+    .cv-accroche-bar {
+      flex-shrink: 0;
+      width: 3px;
+      height: 1rem;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    .cv-accroche-text {
+      font-size: 0.7rem;
+      color: var(--muted);
+      line-height: 1.3;
+      font-style: italic;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* BODY : sidebar + main */
+    .cv-body {
+      display: grid;
+      grid-template-columns: 62mm 1fr;
+    }
+
+    /* SIDEBAR */
+    .cv-sidebar {
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 1.2rem 1.1rem;
+    }
+    .cv-section { margin-bottom: 1.2rem; }
+    .slabel {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+      margin-bottom: 0.7rem;
+    }
+
+    /* Compétences avec barre */
+    .skill { margin-bottom: 0.45rem; }
+    .skill-name { font-size: 0.7rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+    .skill-bar { height: 3px; background: var(--border); border-radius: 2px; }
+    .skill-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+
+    /* Tags */
+    .soft-list { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .soft-tag {
+      font-size: 0.62rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+    }
+
+    /* Tech grid */
+    .tech-grid { display: flex; flex-direction: column; gap: 0.25rem; }
+    .tech {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.68rem;
+    }
+    .tech-name { color: var(--text); font-weight: 500; }
+    .tech-type {
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+    }
+
+    /* Langues */
+    .lang {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      margin-bottom: 0.35rem;
+    }
+    .lang-lvl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--accent);
+    }
+
+    /* MAIN CONTENT */
+    .cv-main { padding: 1.2rem 1.3rem; }
+
+    /* Expériences */
+    .xp { margin-bottom: 0.9rem; }
+    .xp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.15rem; }
+    .xp-role { font-size: 0.78rem; font-weight: 700; color: var(--white); }
+    .xp-date {
+      font-size: 0.62rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+    }
+    .xp-company { font-size: 0.68rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .xp-list { list-style: none; padding: 0; }
+    .xp-list li {
+      font-size: 0.68rem;
+      color: var(--text);
+      padding-left: 0.8rem;
+      position: relative;
+      margin-bottom: 0.15rem;
+      line-height: 1.4;
+    }
+    .xp-list li::before {
+      content: '▹';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-size: 0.65rem;
+    }
+
+    /* Formations */
+    .edu { margin-bottom: 0.75rem; }
+    .edu-title { font-size: 0.75rem; font-weight: 700; color: var(--white); }
+    .edu-school { font-size: 0.68rem; color: var(--muted); }
+    .edu-date {
+      font-size: 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+    }
+
+    /* FOOTER */
+    .cv-footer-line {
+      border-top: 1px solid var(--border);
+      padding: 0.55rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg);
+    }
+    .cv-footer-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--muted);
+    }
+    .cv-footer-links { display: flex; gap: 1rem; }
+    .cv-footer-link {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .cv-footer-link:hover { color: var(--accent); }
+
+    /* PRINT */
+    @media print {
+      @page {
+        size: A4;
+        margin: 0;
+        /* Supprime date, heure et URL dans les marges navigateur */
+        margin-top: 0mm;
+        margin-bottom: 0mm;
+      }
+
+      /* Chrome/Edge/Firefox — supprime les headers/footers natifs */
+      @page { size: A4; margin: 0; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .nav, .pdf-btn-wrap, #cursor, #cursor-ring { display: none !important; }
+
+      body {
+        display: block;
+        padding: 0;
+        align-items: unset;
+      }
+
+      .cv-page {
+        width: 210mm;
+        height: 297mm;
+        max-height: 297mm;
+        overflow: hidden;
+        border: none;
+        box-shadow: none;
+        page-break-after: avoid;
+        transform-origin: top left;
+      }
+
+      /* Resserrement des espacements pour tenir sur une page */
+      .cv-header { padding: 1.1rem 1.6rem; }
+      .cv-section { margin-bottom: 0.8rem; }
+      .cv-main { padding: 0.9rem 1.1rem; }
+      .cv-sidebar { padding: 0.9rem 1rem; }
+      .xp { margin-bottom: 0.6rem; }
+      .edu { margin-bottom: 0.5rem; }
+      .skill { margin-bottom: 0.35rem; }
+
+      /* Force tout le contenu à tenir sans débordement */
+      .cv-body { overflow: hidden; }
+      .cv-main, .cv-sidebar { overflow: hidden; }
+
+      :root {
+        --bg: #f8faf9;
+        --surface: #ffffff;
+        --surface2: #f0f5f3;
+        --border: #d1e0da;
+        --text: #1a2e28;
+        --muted: #5a7a6e;
+        --white: #0a1a14;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Curseur custom -->
+  <div id="cursor" style="position:fixed;width:8px;height:8px;background:#2dd4a0;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);"></div>
+  <div id="cursor-ring" style="position:fixed;width:28px;height:28px;border:1px solid rgba(45,212,160,0.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:opacity 0.2s;"></div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav-logo">AB_</a>
+    <div class="nav-links">
+      <a href="index.html">Accueil</a>
+      <a href="projects.html">Projets</a>
+      <a href="about.html">À propos</a>
+      <a href="cv.html">CV</a>
+      <a href="mailto:antoinebonnet54@gmail.com" class="nav-btn">Contact</a>
+    </div>
+  </nav>
+
+  <!-- BOUTON PDF -->
+  <div class="pdf-btn-wrap">
+    <button class="pdf-btn" onclick="window.print()">⬇ Télécharger PDF</button>
+  </div>
+
+  <!-- PAGE CV A4 -->
+  <div class="cv-page">
+
+    <!-- HEADER -->
+    <div class="cv-header">
+      <img class="cv-photo" src="Image/IMG_20260419_141121.jpg" alt="Antoine Bonnet">
+      <div class="cv-header-info">
+        <div class="cv-name">Antoine Bonnet</div>
+        <div class="cv-title">Développeur Power Platform / Chef de projet · Alternant</div>
+        <div class="cv-contacts">
+          <span class="cv-contact"><span>🌐</span><a href="https://bonnetantoine.github.io" target="_blank">bonnetantoine.github.io</a></span>
+          <span class="cv-contact"><span>✉</span><a href="mailto:antoinebonnet54@gmail.com">antoinebonnet54@gmail.com</a></span>
+          <span class="cv-contact"><span>📞</span><a href="tel:+33636019968">06 36 01 99 68</a></span>
+          <span class="cv-contact"><span>📍</span>Nantes / Angers</span>
+          <span class="cv-contact"><span>🔗</span><a href="https://github.com/BonnetAntoine" target="_blank">github.com/BonnetAntoine</a></span>
+          <span class="cv-contact"><span>🔗</span><a href="https://www.linkedin.com/in/antoine-bonnet-668420267/" target="_blank">linkedin.com/in/antoine-bonnet-668420267</a></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCROCHE -->
+    <div class="cv-accroche">
+      <span class="cv-accroche-bar"></span>
+      <p class="cv-accroche-text">Derrière chaque processus manuel se cache du temps perdu : je le récupère. Automatisation de factures, gestion des congés, onboarding digitalisé, je transforme les processus chronophages en solutions fiables et intuitives. En préparation d'un Master en Management de Projet Digital, je recherche une alternance pour relever de nouveaux défis.</p>
+    </div>
+
+    <!-- BODY -->
+    <div class="cv-body">
+
+      <!-- SIDEBAR -->
+      <div class="cv-sidebar">
+
+        <div class="cv-section">
+          <div class="slabel">Compétences Clés</div>
+          <div class="skill"><div class="skill-name">Power Apps</div><div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div></div>
+          <div class="skill"><div class="skill-name">Power Automate</div><div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div></div>
+          <div class="skill"><div class="skill-name">SharePoint</div><div class="skill-bar"><div class="skill-fill" style="width:80%"></div></div></div>
+          <div class="skill"><div class="skill-name">HTML / CSS / JS</div><div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div></div>
+          <div class="skill"><div class="skill-name">SQL / Azure</div><div class="skill-bar"><div class="skill-fill" style="width:65%"></div></div></div>
+          <div class="skill"><div class="skill-name">Python / PHP</div><div class="skill-bar"><div class="skill-fill" style="width:55%"></div></div></div>
+        </div>
+
+        <div class="cv-section">
+          <div class="slabel">Technologies</div>
+          <div class="tech-grid">
+            <div class="tech"><span class="tech-name">Microsoft 365</span><span class="tech-type">Plateforme</span></div>
+            <div class="tech"><span class="tech-name">Azure Functions</span><span class="tech-type">Cloud</span></div>
+            <div class="tech"><span class="tech-name">Dataverse</span><span class="tech-type">BDD</span></div>
+            <div class="tech"><span class="tech-name">TypeScript / PCF</span><span class="tech-type">Dev</span></div>
+            <div class="tech"><span class="tech-name">Docker / K8s</span><span class="tech-type">DevOps</span></div>
+            <div class="tech"><span class="tech-name">GitHub</span><span class="tech-type">Versioning</span></div>
+            <div class="tech"><span class="tech-name">VS Code</span><span class="tech-type">IDE</span></div>
+          </div>
+        </div>
+
+        <div class="cv-section">
+          <div class="slabel">Soft Skills</div>
+          <div class="soft-list">
+            <span class="soft-tag">Autonomie</span>
+            <span class="soft-tag">Rigueur</span>
+            <span class="soft-tag">Travail d'équipe</span>
+            <span class="soft-tag">Curiosité</span>
+            <span class="soft-tag">Adaptabilité</span>
+          </div>
+        </div>
+
+        <div class="cv-section">
+          <div class="slabel">Langues</div>
+          <div class="lang"><span>Français</span><span class="lang-lvl">NATIF</span></div>
+          <div class="lang"><span>Anglais</span><span class="lang-lvl">B1 TECHNIQUE</span></div>
+        </div>
+
+        <div class="cv-section">
+          <div class="slabel">Centres d'intérêt</div>
+          <div class="soft-list">
+            <span class="soft-tag">🏄 Surf</span>
+            <span class="soft-tag">🎮 Jeux vidéo</span>
+            <span class="soft-tag">💻 Veille tech</span>
+            <span class="soft-tag">🎵 Musique</span>
+            <span class="soft-tag">✈️ Voyage</span>
+          </div>
+        </div>
+
+      </div><!-- /sidebar -->
+
+      <!-- MAIN -->
+      <div class="cv-main">
+
+        <div class="cv-section">
+          <div class="slabel">Projets Notables</div>
+          <ul class="xp-list">
+            <li><strong>Automatisation de gestion des factures (IA)</strong> — détection d'emails entrants via Power Automate, extraction de données structurées par un agent IA entraîné à la reconnaissance de documents, synthèse automatique dans une liste SharePoint</li>
+            <li><strong>Gestion des astreintes</strong> — application Power Apps permettant aux techniciens de visualiser le planning annuel et d'échanger leurs astreintes entre eux, système de notifications Power Automate pour les demandes d'échange, mise à jour automatique du planning et alerte RH pour le traitement des primes</li>
+            <li><strong>Gestion Congés</strong> — cascade CPP/CP5/CPA, intégration calendrier, interface admin</li>
+            <li><strong>Impression automatisée</strong> — Power Automate Desktop déclenchée par SharePoint, zéro port ouvert</li>
+            <li><strong>Portfolio GitHub Pages</strong> — design dark émeraude, pages CV + projets, optimisé impression PDF</li>
+          </ul>
+        </div>
+
+        <div class="cv-section">
+          <div class="slabel">Expériences Professionnelles</div>
+
+          <div class="xp">
+            <div class="xp-head">
+              <span class="xp-role">Développeur Power Platform — Alternant</span>
+              <span class="xp-date">2023 → 2026</span>
+            </div>
+            <div class="xp-company">INEO Atlantique Services · Groupe Equans — La Chapelle-sur-Erdre</div>
+            <ul class="xp-list">
+              <li>Conception et développement de 5+ applications Power Apps (congés, onboarding, réservation matériel, astreintes, matrice de compétences)</li>
+              <li>Automatisation de processus métier via Power Automate (flux de validation, emails HTML, impression SharePoint)</li>
+              <li>Intégration SharePoint, Outlook calendar, Azure Functions et Azure SQL</li>
+              <li>Développement de composants PCF (TypeScript) pour des besoins UI avancés</li>
+              <li>Création de macros VBA Excel pour le traitement de données RH</li>
+            </ul>
+          </div>
+
+          <div class="xp">
+            <div class="xp-head">
+              <span class="xp-role">Projet académique — CRUD Azure</span>
+              <span class="xp-date">2025</span>
+            </div>
+            <div class="xp-company">CNAM / IIA Saint-Nazaire</div>
+            <ul class="xp-list">
+              <li>Application Power Apps connectée à Azure Functions + Azure SQL Database</li>
+              <li>Authentification, parsing JSON, gestion des erreurs HTTP</li>
+            </ul>
+          </div>
+
+          <div class="xp">
+            <div class="xp-head">
+              <span class="xp-role">Projet web — Site vitrine Lycan Conseil</span>
+              <span class="xp-date">2024</span>
+            </div>
+            <div class="xp-company">Projet personnel</div>
+            <ul class="xp-list">
+              <li>Base de données SQL + frontend PHP / Vue.js pour le suivi de camos</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="cv-section">
+          <div class="slabel">Formation</div>
+
+          <div class="edu">
+            <div class="xp-head">
+              <span class="edu-title">Licence Informatique (L3)</span>
+              <span class="xp-date">2025 → 2026</span>
+            </div>
+            <div class="edu-school">CNAM / Institut Informatique Appliquée — Saint-Nazaire</div>
+          </div>
+
+          <div class="edu">
+            <div class="xp-head">
+              <span class="edu-title">BTS SIO SLAM</span>
+              <span class="xp-date">2023 → 2025</span>
+            </div>
+            <div class="edu-school">Institut Informatique Appliquée - Saint Nazaire</div>
+          </div>
+
+          <div class="edu">
+            <div class="xp-head">
+              <span class="edu-title">Baccalauréat STI2D</span>
+              <span class="xp-date">2023</span>
+            </div>
+            <div class="edu-school">Lycée Jean Zay - Thiers(63)</div>
+          </div>
+        </div>
+
+      </div><!-- /main -->
+    </div><!-- /body -->
+
+    <!-- FOOTER -->
+    <div class="cv-footer-line">
+      <span class="cv-footer-id">CV_BONNET_ANTOINE · 2025 · v4.0</span>
+      <div class="cv-footer-links">
+        <a href="https://github.com/BonnetAntoine" class="cv-footer-link" target="_blank">GITHUB</a>
+        <a href="https://www.linkedin.com/in/antoine-bonnet-668420267/" class="cv-footer-link" target="_blank">LINKEDIN</a>
+        <a href="index.html" class="cv-footer-link">PORTFOLIO</a>
+      </div>
+    </div>
+
+  </div><!-- /cv-page -->
+
+  <script>
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    (function tick() {
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+      rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(tick);
+    })();
+  </script>
+
+</body>
+</html>

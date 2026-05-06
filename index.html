@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antoine Bonnet — Développeur Power Platform</title>
+  <meta name="description" content="Antoine Bonnet, développeur alternant Power Platform chez INEO Atlantique. Portfolio de projets et compétences." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-deep: #0d7a5a;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    #particles-canvas {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    /* ─── CURSEUR ─────────────────────────────────────────────── */
+    #cursor {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--em); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .25s var(--ease), height .25s var(--ease), opacity .2s;
+    }
+    #cursor-ring {
+      position: fixed; width: 32px; height: 32px;
+      border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: width .3s var(--ease), height .3s var(--ease), opacity .2s;
+    }
+    body:has(a:hover) #cursor,
+    body:has(button:hover) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring,
+    body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    /* ─── NAV ─────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8,15,12,0.88);
+      backdrop-filter: blur(16px);
+    }
+    .nav-logo {
+      font-family: var(--mono); font-size: 13px; font-weight: 500;
+      color: var(--em); letter-spacing: .04em; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      color: var(--txt-dim); text-decoration: none; text-transform: uppercase;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--txt); }
+    .nav-links a.active { color: var(--em); }
+    .nav-cta {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      color: var(--em); text-decoration: none; text-transform: uppercase;
+      border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px;
+      background: var(--em-bg); transition: background .2s, border-color .2s;
+    }
+    .nav-cta:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    /* ═══════════════════════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════════════════════ */
+    #hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      grid-template-rows: 1fr auto;
+      padding: 0 48px;
+      padding-top: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+
+
+
+    /* Contenu hero gauche */
+    .hero-main {
+      display: flex; flex-direction: column; justify-content: center;
+      padding-right: 64px;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono); font-size: 11px; color: var(--em);
+      letter-spacing: .14em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 36px;
+      animation: heroIn .9s var(--ease) both;
+    }
+    .hero-eyebrow::before {
+      content: ''; width: 32px; height: 1.5px; flex-shrink: 0;
+      background: linear-gradient(90deg, var(--em), transparent);
+    }
+
+    .hero-name {
+      font-family: var(--serif);
+      font-size: clamp(58px, 8vw, 108px);
+      line-height: .9; letter-spacing: -.03em;
+      color: var(--txt);
+      animation: heroIn .9s .07s var(--ease) both;
+    }
+    .hero-name em {
+      display: block; font-style: italic;
+      padding-left: 60px;
+      background: linear-gradient(135deg, var(--em) 0%, var(--em-dim) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-pitch {
+      font-size: 16px; color: var(--txt-mid); line-height: 1.7;
+      max-width: 400px; margin-top: 36px; margin-bottom: 52px;
+      animation: heroIn .9s .16s var(--ease) both;
+    }
+    .hero-pitch strong { color: var(--txt); font-weight: 500; }
+
+    .hero-actions {
+      display: flex; align-items: center; gap: 20px;
+      animation: heroIn .9s .24s var(--ease) both;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--em), var(--em-dim));
+      color: #071009; font-family: var(--mono); font-size: 12px; font-weight: 500;
+      letter-spacing: .08em; text-transform: uppercase;
+      text-decoration: none; padding: 14px 28px; border-radius: 3px;
+      box-shadow: 0 4px 28px rgba(45,212,160,0.25);
+      transition: box-shadow .25s, transform .2s;
+    }
+    .btn-primary:hover { box-shadow: 0 6px 36px rgba(45,212,160,.4); transform: translateY(-1px); }
+    .btn-primary svg { transition: transform .2s; }
+    .btn-primary:hover svg { transform: translateX(4px); }
+    .btn-ghost {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--txt-dim);
+      text-decoration: none; transition: color .2s;
+    }
+    .btn-ghost:hover { color: var(--em); }
+
+    /* Panneau latéral stats */
+    .hero-side {
+      display: flex; flex-direction: column; justify-content: center;
+      border-left: 1px solid var(--line); padding-left: 48px;
+      animation: heroIn .9s .12s var(--ease) both;
+    }
+    .kpi {
+      padding: 32px 0; border-bottom: 1px solid var(--line);
+      position: relative; overflow: hidden;
+    }
+    .kpi:last-child { border-bottom: none; }
+    /* Hover glow sur chaque KPI */
+    .kpi::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(45,212,160,0.05), transparent);
+      opacity: 0; transition: opacity .4s;
+    }
+    .kpi:hover::after { opacity: 1; }
+
+    .kpi-num {
+      font-family: var(--serif); font-size: 54px; line-height: 1;
+      letter-spacing: -.03em; color: var(--txt);
+    }
+    .kpi-num em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--em), var(--em-dim));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .kpi-label {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      letter-spacing: .12em; text-transform: uppercase; margin-top: 5px;
+    }
+
+    /* Barre bas hero */
+    .hero-bar {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 0; border-top: 1px solid var(--line);
+      animation: heroIn .9s .3s var(--ease) both;
+    }
+    .hero-scroll {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      letter-spacing: .12em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .scroll-track {
+      width: 40px; height: 1px; background: var(--line); overflow: hidden; position: relative;
+    }
+    .scroll-track::after {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, var(--em), transparent);
+      animation: scanLine 2.6s 1s ease-in-out infinite;
+    }
+    @keyframes scanLine { 0%{left:-100%} 50%{left:0} 100%{left:100%} }
+    .hero-avail {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      letter-spacing: .1em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .pulse {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--em);
+      animation: pulseAnim 2.2s ease-in-out infinite;
+    }
+    @keyframes pulseAnim {
+      0%   { box-shadow: 0 0 0 0   rgba(45,212,160,.5); }
+      70%  { box-shadow: 0 0 0 7px rgba(45,212,160,0); }
+      100% { box-shadow: 0 0 0 0   rgba(45,212,160,0); }
+    }
+
+    @keyframes heroIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       PROJETS — slider horizontal
+    ═══════════════════════════════════════════════════════ */
+    #projets {
+      padding: 112px 48px;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-head {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 56px;
+    }
+    .section-tag {
+      font-family: var(--mono); font-size: 10px; color: var(--em);
+      letter-spacing: .16em; text-transform: uppercase; margin-bottom: 10px;
+    }
+    .section-title {
+      font-family: var(--serif); font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.0; letter-spacing: -.02em; color: var(--txt);
+    }
+    .slider-controls {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .slider-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--line);
+      color: var(--txt-dim); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color .2s, color .2s, background .2s;
+    }
+    .slider-btn:hover { border-color: var(--em); color: var(--em); background: var(--em-bg); }
+
+    /* Le slider lui-même */
+    .slider-wrap {
+      overflow: hidden; position: relative;
+      /* Padding vertical pour que le translateY(-5px) du hover reste visible */
+      padding: 12px 0 20px;
+      margin: -12px 0 -20px;
+    }
+
+    .slider-track {
+      display: flex; gap: 20px;
+      transition: transform .7s var(--ease);
+      will-change: transform;
+      user-select: none;
+    }
+    .slider-track.no-transition {
+      transition: none;
+    }
+
+    .proj-card {
+      flex: 0 0 400px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 36px;
+      display: flex; flex-direction: column; gap: 20px;
+      text-decoration: none; color: inherit;
+      position: relative; overflow: hidden;
+      transition: border-color .35s, box-shadow .35s, transform .35s;
+      cursor: pointer;
+    }
+    /* Ligne colorée en haut */
+    .proj-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--em), var(--em-dim), transparent);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform .4s var(--ease);
+    }
+    .proj-card:hover {
+      border-color: rgba(45,212,160,0.28);
+      box-shadow: 0 12px 48px rgba(45,212,160,.1);
+      transform: translateY(-5px);
+    }
+    .proj-card:hover::before { transform: scaleX(1); }
+
+    /* Numéro et flèche */
+    .proj-card-top {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .proj-num {
+      font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .1em;
+    }
+    .proj-arrow-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid var(--line); background: var(--bg2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--txt-dim);
+      transition: border-color .25s, color .25s, transform .35s;
+    }
+    .proj-card:hover .proj-arrow-btn {
+      border-color: var(--em); color: var(--em);
+      transform: translate(3px,-3px);
+    }
+
+    .proj-card-title {
+      font-family: var(--serif); font-size: 24px;
+      line-height: 1.2; letter-spacing: -.01em; color: var(--txt);
+    }
+    .proj-card-desc {
+      font-size: 14px; color: var(--txt-mid); line-height: 1.7; flex: 1;
+    }
+    .proj-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ptag {
+      font-family: var(--mono); font-size: 9px; letter-spacing: .06em;
+      text-transform: uppercase; padding: 3px 9px;
+      border: 1px solid var(--em-line); border-radius: 20px;
+      color: var(--em-dim); background: var(--em-bg);
+    }
+
+    /* Dots de pagination */
+    .slider-dots {
+      display: flex; justify-content: center; gap: 8px; margin-top: 36px;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--line); border: 1px solid var(--em-line);
+      transition: background .3s, transform .3s;
+    }
+    .dot.active {
+      background: var(--em);
+      transform: scale(1.3);
+    }
+
+    /* Bouton "Tous les projets" */
+    .all-projects-wrap {
+      display: flex; justify-content: center;
+      margin-top: 48px;
+    }
+    .btn-all-projects {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--mono); font-size: 12px; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--em); text-decoration: none;
+      border: 1.5px solid rgba(45,212,160,0.3);
+      padding: 13px 28px; border-radius: 3px;
+      background: var(--em-bg);
+      transition: background .2s, border-color .2s, box-shadow .2s, transform .2s;
+    }
+    .btn-all-projects:hover {
+      background: rgba(45,212,160,0.12);
+      border-color: var(--em);
+      box-shadow: 0 4px 24px rgba(45,212,160,0.15);
+      transform: translateY(-1px);
+    }
+    .btn-all-projects svg { transition: transform .2s; }
+    .btn-all-projects:hover svg { transform: translateX(4px); }
+
+    /* ═══════════════════════════════════════════════════════
+       CTA — unique, percutant
+    ═══════════════════════════════════════════════════════ */
+    #cta {
+      padding: 120px 48px;
+      border-top: 1px solid var(--line);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    /* Cercles déco */
+    #cta::before {
+      content: ''; position: absolute;
+      width: 680px; height: 680px; border-radius: 50%;
+      border: 1px solid rgba(45,212,160,0.07);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      pointer-events: none;
+    }
+    #cta::after {
+      content: ''; position: absolute;
+      width: 400px; height: 400px; border-radius: 50%;
+      border: 1px solid rgba(45,212,160,0.11);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      pointer-events: none;
+    }
+    #cta > * { position: relative; z-index: 1; }
+
+    .cta-tag {
+      font-family: var(--mono); font-size: 10px; color: var(--em);
+      letter-spacing: .16em; text-transform: uppercase; margin-bottom: 28px;
+    }
+    .cta-title {
+      font-family: var(--serif);
+      font-size: clamp(48px, 7.5vw, 96px);
+      line-height: .92; letter-spacing: -.03em;
+      color: var(--txt); margin-bottom: 52px;
+    }
+    .cta-title em {
+      font-style: italic; display: block;
+      background: linear-gradient(135deg, var(--em), var(--em-dim));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Le CTA : UN seul bouton principal */
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 12px;
+      background: linear-gradient(135deg, var(--em), var(--em-dim));
+      color: #071009; font-family: var(--mono); font-size: 13px; font-weight: 500;
+      letter-spacing: .1em; text-transform: uppercase;
+      text-decoration: none; padding: 18px 40px; border-radius: 3px;
+      box-shadow: 0 6px 36px rgba(45,212,160,0.28);
+      transition: box-shadow .25s, transform .2s;
+      margin-bottom: 32px;
+    }
+    .cta-btn:hover { box-shadow: 0 10px 48px rgba(45,212,160,.45); transform: translateY(-2px); }
+    .cta-btn svg { transition: transform .2s; }
+    .cta-btn:hover svg { transform: translateX(5px); }
+
+    .cta-secondary {
+      font-family: var(--mono); font-size: 11px; color: var(--txt-dim);
+      letter-spacing: .08em;
+    }
+    .cta-secondary a {
+      color: var(--txt-mid); text-decoration: none; transition: color .2s;
+      border-bottom: 1px solid var(--line);
+    }
+    .cta-secondary a:hover { color: var(--em); border-color: var(--em); }
+
+    /* Socials discrets sous le CTA */
+    .cta-socials {
+      display: flex; gap: 28px; margin-top: 48px;
+    }
+    .social-link {
+      font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--txt-dim);
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
+      transition: color .2s;
+    }
+    .social-link:hover { color: var(--em); }
+
+    /* ─── FOOTER ─────────────────────────────────────────────── */
+    footer {
+      padding: 22px 48px; border-top: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-copy {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em;
+    }
+    .footer-back {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      text-decoration: none; letter-spacing: .08em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px; transition: color .2s;
+    }
+    .footer-back:hover { color: var(--em); }
+
+    /* ─── MICRO-ANIMATIONS SCROLL ────────────────────────────── */
+    .reveal {
+      opacity: 0; transform: translateY(32px);
+      transition: opacity .85s var(--ease), transform .85s var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .1s; }
+    .rd2 { transition-delay: .2s; }
+    .rd3 { transition-delay: .3s; }
+
+    /* Chaque card du slider s'anime individuellement */
+    .proj-card {
+      opacity: 0; transform: translateY(20px) scale(.98);
+      transition:
+        opacity .7s var(--ease),
+        transform .7s var(--ease),
+        border-color .35s,
+        box-shadow .35s;
+    }
+    .proj-card.card-visible {
+      opacity: 1; transform: translateY(0) scale(1);
+    }
+    .proj-card.card-visible:hover {
+      transform: translateY(-5px) scale(1);
+    }
+    .proj-card:nth-child(2) { transition-delay: .12s; }
+    .proj-card:nth-child(3) { transition-delay: .24s; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      #hero {
+        grid-template-columns: 1fr; padding: 0 20px; padding-top: 64px;
+      }
+      .hero-side { display: none; }
+      .hero-main { padding-right: 0; }
+      #projets, #cta { padding: 72px 20px; }
+      .proj-card { flex: 0 0 300px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <!-- ── NAV ──────────────────────────────────────────────────── -->
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="projects.html">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <!-- ── HERO ─────────────────────────────────────────────────── -->
+  <section id="hero">
+    <div class="hero-main">
+      <div class="hero-eyebrow">Développeur Power Platform &amp; Chef de projet — Alternant</div>
+      <h1 class="hero-name">
+        Antoine<br>
+        <em>Bonnet</em>
+      </h1>
+      <p class="hero-pitch">
+        Je transforme des processus métier complexes en
+        <strong>applications intuitives et automatisées</strong> —
+        Power Apps, Power Automate, SharePoint...
+      </p>
+      <div class="hero-actions">
+        <a href="#projets" class="btn-primary">
+          Voir les projets
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="cv.html" class="btn-ghost">Mon CV →</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="hero-side">
+      <div class="kpi">
+        <div class="kpi-num">3<em>+</em></div>
+        <div class="kpi-label">Années d'alternance</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-num">08<em>+</em></div>
+        <div class="kpi-label">Apps déployées</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-num">∞</div>
+        <div class="kpi-label">Flows automatisés</div>
+      </div>
+    </div>
+
+    <div class="hero-bar">
+      <div class="hero-scroll">
+        <div class="scroll-track"></div>
+        Explorer
+      </div>
+      <div class="hero-avail">
+        <div class="pulse"></div>
+        Disponible — Nantes / Angers
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PROJETS ───────────────────────────────────────────────── -->
+  <section id="projets">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-tag">01 / Projets</div>
+        <h2 class="section-title">Réalisations</h2>
+      </div>
+      <div class="slider-controls">
+        <button class="slider-btn" id="prev" aria-label="Précédent">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="slider-btn" id="next" aria-label="Suivant">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-wrap">
+      <div class="slider-track" id="sliderTrack">
+
+        <a href="project01.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">01</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Gestion des congés</div>
+          <div class="proj-card-desc">
+            Système RH complet avec logique de cascading entre compteurs CP/CPA/CPP,
+            validation multi-niveaux et intégration Outlook automatisée.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">Power Apps</span>
+            <span class="ptag">Power Automate</span>
+            <span class="ptag">SharePoint</span>
+          </div>
+        </a>
+
+        <a href="project02.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">02</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Automatisation des contrats</div>
+          <div class="proj-card-desc">
+            Pipeline end-to-end : un flux Power Automate capte les e-mails entrants, un agent IA extrait les données des pièces jointes, les incrémente dans SharePoint, puis une macro VBA trie et classe automatiquement les fichiers sur le serveur.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">Power Automate</span>
+            <span class="ptag">Agent IA</span>
+            <span class="ptag">SharePoint</span>
+            <span class="ptag">VBA</span>
+          </div>
+        </a>
+
+        <a href="project03.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">03</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Intégration des collaborateurs</div>
+          <div class="proj-card-desc">
+            Application Power Apps de suivi du parcours d'intégration des nouveaux arrivants — deux parcours (généralisé &amp; personnalisé), déclaration des besoins matériels, accès aux documents SharePoint et validation de période d'essai automatisée via Power Automate.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">Power Apps</span>
+            <span class="ptag">Power Automate</span>
+            <span class="ptag">SharePoint</span>
+            <span class="ptag">PowerFX</span>
+          </div>
+        </a>
+
+        <a href="project04.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">04</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Gestion de l'astreinte</div>
+          <div class="proj-card-desc">
+            Application Power Apps d'échange de planning entre techniciens — demande pair-à-pair, validation ou refus depuis l'app, mise à jour automatique des bases de données et planning annuel personnalisé croisant astreintes et congés.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">Power Apps</span>
+            <span class="ptag">Power Automate</span>
+            <span class="ptag">SharePoint</span>
+            <span class="ptag">PowerFX</span>
+          </div>
+        </a>
+
+        <a href="project05.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">05</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Commande de vêtements de travail</div>
+          <div class="proj-card-desc">
+            Catalogue digital des vêtements logotés INEO en Power Apps — double interface mobile &amp; PC, deux formulaires de commande, collecte dans Lists Microsoft et flux Power Automate hebdomadaire envoyant un e-mail HTML aux magasiniers chaque vendredi à 11h.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">Power Apps</span>
+            <span class="ptag">Power Automate</span>
+            <span class="ptag">Lists Microsoft</span>
+            <span class="ptag">Outlook</span>
+          </div>
+        </a>
+
+        <a href="project06.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">06</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Notes de modification horaire</div>
+          <div class="proj-card-desc">
+            Application Power Apps de génération de notes de modification horaire — deux formulaires, logique conditionnelle (travail de nuit / délégué du personnel), création de PDF à la volée, archivage SharePoint et envoi automatisé avec pièce jointe via Power Automate.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">Power Apps</span>
+            <span class="ptag">Power Automate</span>
+            <span class="ptag">SharePoint</span>
+            <span class="ptag">PowerFX</span>
+          </div>
+        </a>
+
+        <a href="project07.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">07</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Gestion des stocks informatique</div>
+          <div class="proj-card-desc">
+            Application Power Apps de gestion du matériel informatique multi-agences — entrées, mises à jour, sorties de stock et alertes de stock faible configurables par produit, 100 % PowerFX sans Power Automate.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">Power Apps</span>
+            <span class="ptag">Lists Microsoft</span>
+            <span class="ptag">PowerFX</span>
+            <span class="ptag">Multi-agences</span>
+          </div>
+        </a>
+
+        <a href="project08.html" class="proj-card">
+          <div class="proj-card-top">
+            <span class="proj-num">08</span>
+            <div class="proj-arrow-btn">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="proj-card-title">Automatisation d'envoi e-mail</div>
+          <div class="proj-card-desc">
+            Remplacement du VBA Outlook disparu — macro VBA dans Excel assignée à un bouton, extraction des données client, envoi dans une liste SharePoint et flux Power Automate ciblant automatiquement le bon destinataire.
+          </div>
+          <div class="proj-card-tags">
+            <span class="ptag">VBA Excel</span>
+            <span class="ptag">SharePoint</span>
+            <span class="ptag">Power Automate</span>
+            <span class="ptag">Outlook</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <div class="slider-dots" id="sliderDots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="all-projects-wrap reveal rd2">
+      <a href="projects.html" class="btn-all-projects">
+        Tous les projets
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── CTA ───────────────────────────────────────────────────── -->
+  <section id="cta">
+    <div class="cta-tag reveal">02 / Contact</div>
+    <h2 class="cta-title reveal rd1">
+      Une idée ?<br>
+      <em>Parlons-en.</em>
+    </h2>
+
+    <!-- UN seul CTA principal -->
+    <a href="mailto:antoinebonnet54@gmail.com" class="cta-btn reveal rd2">
+      M'écrire directement
+      <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+        <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+
+    <p class="cta-secondary reveal rd2">
+      Ou consulter mon <a href="cv.html">CV en ligne</a> · <a href="about.html">En savoir plus</a>
+    </p>
+
+    <div class="cta-socials reveal rd3">
+      <a href="https://github.com/BonnetAntoine" class="social-link" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub
+      </a>
+      <a href="https://www.linkedin.com/in/antoine-bonnet-668420267/" class="social-link" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/>
+        </svg>
+        LinkedIn
+      </a>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ── FOOTER ────────────────────────────────────────────────── -->
+  <footer>
+    <span class="footer-copy">© 2026 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#hero" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <!-- ── JS ────────────────────────────────────────────────────── -->
+  <script>
+    /* ── Particules / constellations ── */
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const PARTICLE_COUNT = 150;
+      const CONNECTION_DIST = 150;
+      const MOUSE_RADIUS = 130;
+
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+
+      /* ── Constellation du Verseau — fidèle à la forme réelle ──
+         Coordonnées extraites depuis image de référence (normalisées 0→1).
+         Axe Y : 0 = haut, 1 = bas.                                        */
+      const AQUARIUS_STARS = [
+        // Partie haute — ligne diagonale montante droite→gauche
+        { nx: 0.72, ny: 0.08, r: 2.6, name: 'Sadalmelik α' },  // 0  — étoile haute droite
+        { nx: 0.58, ny: 0.22, r: 2.2, name: 'Sadalsuud β'  },  // 1  — milieu diagonal haut
+        { nx: 0.42, ny: 0.36, r: 2.8, name: 'Sadachbia γ'  },  // 2  — nœud central (gros)
+        // Branche droite depuis le nœud — petit triangle
+        { nx: 0.55, ny: 0.40, r: 1.8, name: 'Ancha θ'      },  // 3
+        { nx: 0.63, ny: 0.38, r: 1.6, name: 'η Aqr'        },  // 4
+        { nx: 0.68, ny: 0.42, r: 1.5, name: 'ι Aqr'        },  // 5
+        // Branche gauche-bas depuis le nœud — longue diagonale
+        { nx: 0.36, ny: 0.48, r: 2.0, name: 'Albali ε'     },  // 6
+        { nx: 0.30, ny: 0.58, r: 2.2, name: 'Skat δ'       },  // 7  — coude bas gauche
+        { nx: 0.38, ny: 0.66, r: 1.7, name: 'τ² Aqr'       },  // 8
+        // Partie basse — rectangle/zigzag horizontal
+        { nx: 0.34, ny: 0.76, r: 1.8, name: 'Situla κ'     },  // 9  — bas gauche
+        { nx: 0.44, ny: 0.80, r: 1.6, name: '88 Aqr'       },  // 10
+        { nx: 0.52, ny: 0.75, r: 1.5, name: 'b¹ Aqr'       },  // 11
+        { nx: 0.60, ny: 0.78, r: 2.0, name: 'Skat δ2'      },  // 12
+        { nx: 0.68, ny: 0.74, r: 1.6, name: 'ψ¹ Aqr'       },  // 13
+      ];
+
+      /* Liaisons — reproduit exactement la forme de l'image */
+      const AQUARIUS_EDGES = [
+        // Diagonale haute : 0→1→2
+        [0, 1], [1, 2],
+        // Branche droite (petit groupe) : 2→3→4→5
+        [2, 3], [3, 4], [4, 5],
+        // Branche gauche-bas : 2→6→7→8
+        [2, 6], [6, 7], [7, 8],
+        // Partie basse (zigzag) : 8→9→10→11→12→13
+        [8, 9], [9, 10], [10, 11], [11, 12], [12, 13],
+      ];
+
+      /* Animation d'apparition au chargement */
+      let introProgress = 0; // 0 → 1 sur ~2.5s
+      const INTRO_DURATION = 2500;
+      const introStart = performance.now();
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+
+      function randBetween(a, b) { return a + Math.random() * (b - a); }
+
+      /* Coordonnées canvas d'une étoile Verseau */
+      function starPos(star) {
+        /* Constellation centrée côté droit du hero */
+        const offsetX = W * 0.38;
+        const offsetY = H * 0.06;
+        const scaleX  = W * 0.38;
+        const scaleY  = H * 0.78;
+        return {
+          x: offsetX + star.nx * scaleX,
+          y: offsetY + star.ny * scaleY
+        };
+      }
+
+      function createParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          particles.push({
+            x:  Math.random() * W,
+            y:  Math.random() * H,
+            vx: randBetween(-0.22, 0.22),
+            vy: randBetween(-0.18, 0.18),
+            r:  randBetween(1.5, 2.8),
+            opacity: randBetween(0.55, 0.95),
+            constellation: false
+          });
+        }
+      }
+
+      function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+      function drawConstellation(progress) {
+        const p = easeOutCubic(Math.min(progress, 1));
+
+        /* Lignes de la constellation */
+        AQUARIUS_EDGES.forEach(([ia, ib], idx) => {
+          /* Chaque ligne apparaît en décalé */
+          const lineP = Math.max(0, Math.min(1, (p * AQUARIUS_EDGES.length - idx) ));
+          if (lineP <= 0) return;
+
+          const a = starPos(AQUARIUS_STARS[ia]);
+          const b = starPos(AQUARIUS_STARS[ib]);
+
+          /* On trace la ligne progressivement */
+          const ex = a.x + (b.x - a.x) * lineP;
+          const ey = a.y + (b.y - a.y) * lineP;
+
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(ex, ey);
+          ctx.strokeStyle = `rgba(${EM}, ${0.30 * p})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        });
+
+        /* Étoiles de la constellation */
+        AQUARIUS_STARS.forEach((star, idx) => {
+          const starP = Math.max(0, Math.min(1, (p * AQUARIUS_STARS.length * 0.9 - idx)));
+          if (starP <= 0) return;
+          const pos = starPos(star);
+
+          /* Halo */
+          const grd = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, star.r * 5);
+          grd.addColorStop(0, `rgba(${EM},${0.25 * starP})`);
+          grd.addColorStop(1, `rgba(${EM},0)`);
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, star.r * 5, 0, Math.PI * 2);
+          ctx.fillStyle = grd;
+          ctx.fill();
+
+          /* Point principal */
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, star.r * starP, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${EM},${0.9 * starP})`;
+          ctx.fill();
+        });
+      }
+
+      function draw(now) {
+        ctx.clearRect(0, 0, W, H);
+
+        /* Progression intro */
+        introProgress = (now - introStart) / INTRO_DURATION;
+
+        /* Connexions particules aléatoires — traits visibles mais discrets */
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i], b = particles[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < CONNECTION_DIST) {
+              const alpha = (1 - dist / CONNECTION_DIST) * 0.22;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(${EM},${alpha})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+
+        /* Constellation Verseau */
+        drawConstellation(introProgress);
+
+        /* Particules */
+        particles.forEach(p => {
+          /* Réaction souris */
+          const mdx = mouse.x - p.x, mdy = mouse.y - p.y;
+          const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
+          if (mdist < MOUSE_RADIUS) {
+            const force = (1 - mdist / MOUSE_RADIUS) * 0.012;
+            p.vx += mdx * force;
+            p.vy += mdy * force;
+          }
+
+          /* Vitesse min pour éviter l'arrêt complet */
+          const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+          if (speed < 0.12) {
+            p.vx += (Math.random() - 0.5) * 0.08;
+            p.vy += (Math.random() - 0.5) * 0.08;
+          }
+          /* Vitesse max */
+          if (speed > 0.8) { p.vx = p.vx/speed*0.8; p.vy = p.vy/speed*0.8; }
+
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0)  { p.x = 0;  p.vx *= -1; }
+          if (p.x > W)  { p.x = W;  p.vx *= -1; }
+          if (p.y < 0)  { p.y = 0;  p.vy *= -1; }
+          if (p.y > H)  { p.y = H;  p.vy *= -1; }
+
+          /* Halo doux */
+          const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
+          glow.addColorStop(0, `rgba(${EM},${p.opacity * 0.35})`);
+          glow.addColorStop(1, `rgba(${EM},0)`);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
+          ctx.fillStyle = glow;
+          ctx.fill();
+
+          /* Point central */
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${EM},${p.opacity})`;
+          ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+      resize();
+      createParticles();
+      requestAnimationFrame(draw);
+    })();
+
+    /* Curseur */
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    (function tick() {
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+      rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(tick);
+    })();
+
+    /* ── Slider ── */
+    const sliderWrap = document.querySelector('.slider-wrap');
+    const track  = document.getElementById('sliderTrack');
+    const cards  = track.querySelectorAll('.proj-card');
+    const dots   = document.querySelectorAll('.dot');
+    const btnPrev = document.getElementById('prev');
+    const btnNext = document.getElementById('next');
+    let current = 0;
+
+    /* Largeur d'une card + gap */
+    function cardWidth() {
+      return cards[0].offsetWidth + 20;
+    }
+
+    /* Offset max : aligne la dernière carte sur le bord droit du wrapper */
+    function maxOffset() {
+      const wrapW = sliderWrap.offsetWidth;
+      const totalW = cards.length * cardWidth() - 20;
+      return Math.max(0, totalW - wrapW);
+    }
+
+    const DOT_COUNT = dots.length; // 5 dots pour 7 cartes
+
+    /* Calcule l'offset pour un index de carte, plafonné à maxOffset */
+    function offsetForCardIdx(idx) {
+      return Math.min(idx * cardWidth(), maxOffset());
+    }
+
+    /* Convertit un index de dot en index de carte
+       Dot 0→3 = cartes 0→3, dot 4 (dernier) = dernière carte */
+    function cardIdxForDot(dotIdx) {
+      if (dotIdx === DOT_COUNT - 1) return cards.length - 1;
+      return dotIdx;
+    }
+
+    /* Trouve le dot actif à partir de l'offset courant */
+    function dotForOffset(offset) {
+      const max = maxOffset();
+      if (offset >= max) return DOT_COUNT - 1;
+      const cardIdx = Math.round(offset / cardWidth());
+      return Math.min(cardIdx, DOT_COUNT - 2);
+    }
+
+    function goTo(cardIdx) {
+      current = Math.max(0, Math.min(cardIdx, cards.length - 1));
+      track.classList.remove('no-transition');
+      const offset = offsetForCardIdx(current);
+      track.style.transform = `translateX(-${offset}px)`;
+      const activeDot = dotForOffset(offset);
+      dots.forEach((d, i) => d.classList.toggle('active', i === activeDot));
+    }
+
+    btnNext.addEventListener('click', () => goTo(current + 1));
+    btnPrev.addEventListener('click', () => goTo(current - 1));
+    dots.forEach((d, i) => d.addEventListener('click', () => goTo(cardIdxForDot(i))));
+
+    /* Swipe tactile */
+    let touchX = 0;
+    track.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 50) goTo(dx < 0 ? current + 1 : current - 1);
+    });
+
+    /* ── Reveal au scroll ── */
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('visible');
+        revealObs.unobserve(e.target);
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+    /* ── Cards du slider : animation au scroll ── */
+    const cardObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        /* On anime toutes les cards quand la section entre dans le viewport */
+        cards.forEach(c => c.classList.add('card-visible'));
+        cardObs.disconnect();
+      });
+    }, { threshold: 0.2 });
+    cardObs.observe(document.getElementById('projets'));
+    /* ── Nav active ── */
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      const linkPage = link.getAttribute('href').split('#')[0];
+      if (linkPage === currentPage || (currentPage === '' && linkPage === 'index.html')) {
+        link.classList.add('active');
+      }
+    });
+
+  </script>
+
+</body>
+</html>

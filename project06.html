@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notes de modification horaire — Antoine Bonnet</title>
+  <meta name="description" content="Application Power Apps de génération de notes de modification horaire — formulaires structurés, génération PDF dynamique avec logique conditionnelle, envoi automatisé via Power Automate." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --line2:   rgba(45,212,160,0.16);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* Accents logique conditionnelle */
+      --cond:      #fbbf24;
+      --cond-bg:   rgba(251,191,36,0.06);
+      --cond-line: rgba(251,191,36,0.22);
+
+      /* Accent PDF */
+      --pdf:      #f87171;
+      --pdf-bg:   rgba(248,113,113,0.06);
+      --pdf-line: rgba(248,113,113,0.20);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--txt); font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; cursor: none; }
+
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    /* ─── CURSEUR ─── */
+    #cursor { position: fixed; width: 8px; height: 8px; background: var(--em); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width .25s var(--ease), height .25s var(--ease); }
+    #cursor-ring { position: fixed; width: 32px; height: 32px; border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: width .3s var(--ease), height .3s var(--ease), opacity .2s; }
+    body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    /* ─── NAV ─── */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.88); backdrop-filter: blur(16px); }
+    .nav-logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--em); letter-spacing: .04em; text-decoration: none; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--txt-dim); text-decoration: none; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover { color: var(--txt); }
+    .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--em); text-decoration: none; text-transform: uppercase; border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px; background: var(--em-bg); transition: background .2s, border-color .2s; }
+    .nav-cta:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    /* ─── SUBNAV ─── */
+    .proj-subnav { position: fixed; top: 64px; left: 0; right: 0; z-index: 99; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 44px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.80); backdrop-filter: blur(12px); }
+    .proj-subnav-link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-dim); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color .2s; }
+    .proj-subnav-link:hover { color: var(--em); }
+    .proj-subnav-link.prev:hover svg { transform: translateX(-3px); }
+    .proj-subnav-link.next:hover svg { transform: translateX(3px); }
+    .proj-subnav-link svg { transition: transform .2s; }
+
+    /* ═══ HERO ═══ */
+    .proj-hero { min-height: 78vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 108px 48px 96px; position: relative; border-bottom: 1px solid var(--line); } 
+    .hero-bg-num { position: absolute; right: 48px; bottom: 40px; font-family: var(--serif); font-size: 30vw; line-height: 1; color: rgba(45,212,160,0.025); letter-spacing: -.05em; pointer-events: none; user-select: none; }
+    .proj-hero-breadcrumb { font-family: var(--mono); font-size: 11px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 36px; animation: fadeUp .8s var(--ease) both; }
+    .proj-hero-breadcrumb a { color: var(--txt-dim); text-decoration: none; transition: color .2s; }
+    .proj-hero-breadcrumb a:hover { color: var(--em); }
+    .proj-hero-breadcrumb span { color: var(--em); }
+    .proj-hero-title { font-family: var(--serif); font-size: clamp(48px, 7.5vw, 100px); line-height: 1.3; letter-spacing: -.03em; color: var(--txt); margin-bottom: 36px; animation: fadeUp .8s .08s var(--ease) both; }
+    .proj-hero-title em { font-style: italic; display: block; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; padding-right: 6px; }
+    .proj-hero-meta { display: flex; align-items: stretch; gap: 0; border-top: 1px solid var(--line); padding-top: 28px; animation: fadeUp .8s .18s var(--ease) both; }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; padding-right: 40px; margin-right: 40px; border-right: 1px solid var(--line); }
+    .meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .meta-key { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .14em; text-transform: uppercase; }
+    .meta-val { font-size: 14px; color: var(--txt); font-weight: 500; }
+    .meta-val-em { color: var(--em); font-family: var(--mono); font-size: 13px; }
+    .proj-hero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; align-items: flex-end; }
+    .ptag { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--em-line); border-radius: 20px; color: var(--em-dim); background: var(--em-bg); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+    /* ═══ LOGIQUE CONDITIONNELLE ═══ */
+    .cond-section {
+      border-bottom: 1px solid var(--line);
+      padding: 80px 48px;
+    }
+    .section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .section-h2 { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 8px; }
+    .section-intro { font-size: 15px; color: var(--txt-mid); line-height: 1.8; max-width: 680px; margin-bottom: 44px; }
+
+    .cond-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .cond-card {
+      border-radius: 12px;
+      border: 1px solid var(--cond-line);
+      background: var(--cond-bg);
+      overflow: hidden;
+    }
+    .cond-card-head {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--cond-line);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .cond-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(251,191,36,0.12); border: 1px solid var(--cond-line);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .cond-icon svg { color: var(--cond); }
+    .cond-label { font-size: 14px; font-weight: 500; color: var(--cond); }
+    .cond-sublabel { font-family: var(--mono); font-size: 9px; color: rgba(251,191,36,0.5); letter-spacing: .08em; text-transform: uppercase; margin-top: 1px; }
+    .cond-body { padding: 18px 22px; }
+    .cond-trigger {
+      font-family: var(--mono); font-size: 10px; color: var(--cond);
+      letter-spacing: .08em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+    }
+    .cond-trigger::before { content: 'SI'; display: inline-block; padding: 2px 7px; border-radius: 4px; background: rgba(251,191,36,0.15); border: 1px solid var(--cond-line); font-size: 9px; }
+    .cond-desc { font-size: 13px; color: var(--txt-mid); line-height: 1.65; }
+    .cond-result {
+      margin-top: 12px; padding: 12px 14px;
+      background: rgba(251,191,36,0.04); border: 1px solid var(--cond-line);
+      border-radius: 8px; font-size: 12px; color: var(--txt-mid); line-height: 1.55;
+      display: flex; gap: 8px;
+    }
+    .cond-result-arrow { color: var(--cond); flex-shrink: 0; }
+
+    /* ═══ APERÇU DOCUMENT PDF ═══ */
+    .doc-section {
+      border-bottom: 1px solid var(--line);
+      padding: 80px 48px;
+    }
+
+    .doc-preview {
+      margin-top: 44px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Maquette document */
+    .doc-mock {
+      border-radius: 10px;
+      border: 1px solid var(--pdf-line);
+      background: var(--surface);
+      overflow: hidden;
+      position: relative;
+    }
+    .doc-mock::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--pdf), transparent);
+    }
+    .doc-mock-bar {
+      padding: 14px 20px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--pdf-line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .doc-mock-title {
+      font-family: var(--mono); font-size: 10px; color: var(--pdf);
+      letter-spacing: .12em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .doc-mock-badge {
+      font-family: var(--mono); font-size: 8px; color: var(--pdf);
+      letter-spacing: .10em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 10px;
+      background: var(--pdf-bg); border: 1px solid var(--pdf-line);
+    }
+    .doc-body { padding: 24px 24px 28px; display: flex; flex-direction: column; gap: 14px; }
+
+    .doc-section-header {
+      font-family: var(--mono); font-size: 8px; color: var(--em);
+      letter-spacing: .14em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px; margin-top: 4px;
+    }
+    .doc-section-header::after { content: ''; flex: 1; height: 1px; background: var(--em-line); }
+
+    .doc-row {
+      display: grid; grid-template-columns: 140px 1fr;
+      gap: 8px; align-items: baseline;
+    }
+    .doc-row-key {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim);
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    .doc-row-val {
+      font-size: 12px; color: var(--txt-mid);
+    }
+    .doc-row-val.filled { color: var(--txt); }
+    .doc-row-val.placeholder {
+      font-style: italic; color: var(--txt-dim);
+    }
+
+    /* Ligne conditionnelle */
+    .doc-row-cond {
+      grid-column: 1 / -1;
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px; border-radius: 6px;
+      background: var(--cond-bg); border: 1px solid var(--cond-line);
+    }
+    .doc-row-cond-icon { color: var(--cond); flex-shrink: 0; margin-top: 1px; }
+    .doc-row-cond-text { font-size: 11px; color: var(--cond); line-height: 1.5; }
+    .doc-row-cond-text span { color: rgba(251,191,36,0.55); font-size: 10px; display: block; margin-top: 2px; font-style: italic; }
+
+    /* Table horaires */
+    .doc-table {
+      width: 100%; border-collapse: collapse; margin-top: 4px;
+    }
+    .doc-table th {
+      font-family: var(--mono); font-size: 8px; color: var(--em);
+      letter-spacing: .10em; text-transform: uppercase;
+      padding: 6px 10px; border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+    .doc-table td {
+      font-size: 11px; color: var(--txt-mid);
+      padding: 7px 10px; border-bottom: 1px solid rgba(45,212,160,0.05);
+    }
+    .doc-table td.date { color: var(--em-dim); font-family: var(--mono); font-size: 10px; }
+
+    /* Colonne détails du doc */
+    .doc-details { display: flex; flex-direction: column; gap: 16px; }
+    .doc-detail-item {
+      padding: 16px 18px;
+      border: 1px solid var(--line); border-radius: 10px;
+      background: var(--surface);
+      transition: border-color .2s;
+    }
+    .doc-detail-item:hover { border-color: var(--em-line); }
+    .doc-detail-num {
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .14em; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .doc-detail-title { font-size: 13px; font-weight: 500; color: var(--txt); margin-bottom: 4px; }
+    .doc-detail-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* ═══ PIPELINE ═══ */
+    .pipeline-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+
+    .pipeline {
+      margin-top: 44px;
+      display: flex; align-items: stretch; gap: 0; position: relative;
+    }
+    .pipeline-step {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      text-align: center; position: relative;
+    }
+    .pipeline-step:not(:last-child)::after { content: ''; position: absolute; top: 28px; right: -1px; width: 50%; height: 1px; background: linear-gradient(90deg, var(--em-line), transparent); z-index: 0; }
+    .pipeline-step:not(:first-child)::before { content: ''; position: absolute; top: 28px; left: -1px; width: 50%; height: 1px; background: linear-gradient(90deg, transparent, var(--em-line)); z-index: 0; }
+    .pipeline-node { width: 56px; height: 56px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--em-line); display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; flex-shrink: 0; }
+    .pipeline-node svg { color: var(--em); }
+    .pipeline-step.highlight .pipeline-node { border-color: var(--pdf); box-shadow: 0 0 0 6px rgba(248,113,113,0.07); }
+    .pipeline-step.highlight .pipeline-node svg { color: var(--pdf); }
+    .pipeline-label { font-size: 13px; font-weight: 500; color: var(--txt); margin-top: 16px; line-height: 1.3; }
+    .pipeline-sub { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .08em; text-transform: uppercase; margin-top: 5px; line-height: 1.4; }
+    .pipeline-step.highlight .pipeline-label { color: var(--pdf); }
+
+    /* ═══ CONTENU PRINCIPAL ═══ */
+    .proj-content { display: grid; grid-template-columns: 1fr 320px; gap: 0; border-bottom: 1px solid var(--line); }
+    .proj-main { padding: 96px 80px 96px 48px; border-right: 1px solid var(--line); }
+    .proj-section { margin-bottom: 72px; }
+    .proj-section:last-child { margin-bottom: 0; }
+    .proj-section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .proj-section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .proj-section-title { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 24px; }
+    .proj-section-body { font-size: 15px; color: var(--txt-mid); line-height: 1.85; }
+    .proj-section-body p + p { margin-top: 16px; }
+    .proj-section-body strong { color: var(--txt); font-weight: 500; }
+
+    /* Timeline */
+    .proj-timeline { list-style: none; margin-top: 24px; }
+    .ptl-item { display: grid; grid-template-columns: 28px 1fr; gap: 16px; padding-bottom: 36px; position: relative; }
+    .ptl-item:last-child { padding-bottom: 0; }
+    .ptl-item::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 1px; background: linear-gradient(180deg, var(--em-dim), transparent); }
+    .ptl-item:last-child::before { display: none; }
+    .ptl-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--em); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 0 4px rgba(45,212,160,0.08); }
+    .ptl-dot svg { width: 12px; height: 12px; color: var(--em); }
+    .ptl-dot.pdf-dot { border-color: var(--pdf); box-shadow: 0 0 0 4px rgba(248,113,113,0.08); }
+    .ptl-dot.pdf-dot svg { color: var(--pdf); }
+    .ptl-step { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+    .ptl-step.pdf-step { color: var(--pdf); }
+    .ptl-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 6px; }
+    .ptl-desc { font-size: 14px; color: var(--txt-mid); line-height: 1.7; }
+
+    /* Fonctionnalités */
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .feat-item { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); transition: background .25s; }
+    .feat-item:last-child { border-bottom: none; }
+    .feat-item:hover { background: var(--bg2); }
+    .feat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--em); flex-shrink: 0; margin-top: 7px; }
+    .feat-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .feat-desc { font-size: 13px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* ─── Sidebar ─── */
+    .proj-sidebar { padding: 96px 48px; display: flex; flex-direction: column; gap: 48px; }
+    .sidebar-label { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line2), transparent); }
+    .stack-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .stack-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; transition: border-color .2s; }
+    .stack-item:hover { border-color: var(--em-line); }
+    .stack-name { font-size: 13px; color: var(--txt); font-weight: 500; }
+    .stack-role { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 16px; position: relative; overflow: hidden; }
+    .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--em), transparent); }
+    .metric-num { font-family: var(--serif); font-size: 32px; line-height: 1; letter-spacing: -.02em; color: var(--txt); }
+    .metric-num em { font-style: normal; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .metric-label { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; }
+    .proj-status { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: rgba(45,212,160,0.06); border: 1px solid rgba(45,212,160,0.2); border-radius: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--em); flex-shrink: 0; animation: pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(45,212,160,.5); } 70% { box-shadow: 0 0 0 6px rgba(45,212,160,0); } 100% { box-shadow: 0 0 0 0 rgba(45,212,160,0); } }
+    .status-text { font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .06em; }
+
+    /* ─── FOOTER ─── */
+    footer { padding: 22px 48px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .footer-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em; }
+    .footer-back { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); text-decoration: none; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+    .footer-back:hover { color: var(--em); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .1s; }
+
+
+    /* ═══ SLIDER CAPTURES ═══ */
+    .screens-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+    .screens-header { margin-bottom: 36px; }
+    .screens-slider-wrap { position: relative; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); overflow: hidden; }
+    .screens-track { display: flex; transition: transform .55s cubic-bezier(0.16,1,0.3,1); will-change: transform; }
+    .screen-slide { flex: 0 0 100%; display: flex; flex-direction: column; }
+    .screen-slide img { width: 100%; height: 620px; display: block; object-fit: contain; object-position: center; background: var(--bg2); border-bottom: 1px solid var(--line); }
+    /* Slide PDF : portrait plus haute */
+    .screen-slide.portrait img { height: 560px; object-fit: contain; object-position: center; }
+    .screen-caption { display: flex; align-items: flex-start; gap: 16px; padding: 16px 22px; background: var(--surface); }
+    .screen-num { font-family: var(--mono); font-size: 10px; color: var(--em); letter-spacing: .14em; flex-shrink: 0; margin-top: 2px; }
+    .screen-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .screen-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+    .screen-btn { position: absolute; top: 210px; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--em-line); background: rgba(8,15,12,0.82); backdrop-filter: blur(8px); color: var(--txt); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s, border-color .2s, color .2s; z-index: 2; }
+    .screen-btn:hover { background: var(--em-bg); border-color: var(--em); color: var(--em); }
+    .screen-prev { left: 14px; } .screen-next { right: 14px; }
+    .screen-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }
+    .screen-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--txt-dim); cursor: pointer; transition: background .2s, transform .2s; }
+    .screen-dot.active { background: var(--em); transform: scale(1.4); }
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .proj-hero { padding-left: 20px; padding-right: 20px; }
+      .proj-hero-meta { flex-wrap: wrap; gap: 20px; }
+      .meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+      .proj-hero-tags { margin-left: 0; margin-top: 16px; }
+      .cond-section, .doc-section, .pipeline-section { padding: 48px 20px; }
+      .cond-grid { grid-template-columns: 1fr; }
+      .doc-preview { grid-template-columns: 1fr; }
+      .pipeline { flex-direction: column; gap: 24px; }
+      .pipeline-step::before, .pipeline-step::after { display: none; }
+      .proj-content { grid-template-columns: 1fr; }
+      .proj-main { padding: 60px 20px; border-right: none; }
+      .proj-sidebar { padding: 0 20px 60px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="projects.html">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <div class="proj-subnav">
+    <a href="project05.html" class="proj-subnav-link prev">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M6 2L1 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Projet précédent — Vêtements de travail
+    </a>
+    <a href="project07.html" class="proj-subnav-link next">
+      Projet suivant — Gestion des stocks informatique
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <!-- ══ HERO ══ -->
+  <div class="proj-hero">
+    
+    
+
+    <div class="proj-hero-breadcrumb">
+      <a href="index.html">Accueil</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <a href="index.html">Projets</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Notes de modification horaire</span>
+    </div>
+
+    <h1 class="proj-hero-title">
+      Modification<br><em>des horaires</em>
+    </h1>
+
+    <div class="proj-hero-meta">
+      <div class="meta-item">
+        <span class="meta-key">Contexte</span>
+        <span class="meta-val">INEO Atlantique Services</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Période</span>
+        <span class="meta-val">2025 → En production</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Rôle</span>
+        <span class="meta-val">Développeur seul</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Statut</span>
+        <span class="meta-val meta-val-em">● Déployé</span>
+      </div>
+      <div class="proj-hero-tags">
+        <span class="ptag">Power Apps</span>
+        <span class="ptag">Power Automate</span>
+        <span class="ptag">SharePoint</span>
+        <span class="ptag">Outlook</span>
+        <span class="ptag">PowerFX</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDER CAPTURES ══ -->
+  <section class="screens-section reveal">
+    <div class="screens-header">
+      <div class="section-tag">Aperçu de l'application</div>
+      <h2 class="section-h2" style="margin-bottom:6px;">L'interface en images</h2>
+      <p style="font-size:14px;color:var(--txt-mid);">Captures réelles de l'application Power Apps — interface bureau uniquement.</p>
+    </div>
+
+    <div class="screens-slider-wrap">
+      <div class="screens-track" id="screensTrack">
+
+        <div class="screen-slide">
+          <img src="image/Home_modif_hor.png" alt="Écran d'accueil — Changement temporaire d'horaire" />
+          <div class="screen-caption">
+            <span class="screen-num">01</span>
+            <div>
+              <div class="screen-title">Écran d'accueil</div>
+              <div class="screen-desc">Point d'entrée de l'application : accès au formulaire de changement d'horaire (moins ou plus de 8 jours), à l'historique des demandes et aux pièces jointes.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="image/form1_modif_h.png" alt="Formulaire 1 — Informations document" />
+          <div class="screen-caption">
+            <span class="screen-num">02</span>
+            <div>
+              <div class="screen-title">Formulaire 1 — Informations du document</div>
+              <div class="screen-desc">Saisie des données contextuelles : date, e-mails expéditeur et destinataire, référence intervention, client, date demande client, type d'intervention, nom du RA et case "Élu du personnel ou travail de nuit" qui conditionne le document généré.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="image/form2_modif_h.png" alt="Formulaire 2 — Plages horaires" />
+          <div class="screen-caption">
+            <span class="screen-num">03</span>
+            <div>
+              <div class="screen-title">Formulaire 2 — Plages horaires modifiées</div>
+              <div class="screen-desc">Saisie jour par jour des dates, horaires matin et après-midi avec calcul automatique du total d'heures. Le numéro de semaine est sélectionnable et les jours fériés sont signalés par une bordure rouge.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide portrait">
+          <img src="image/doc_pdf_modif_h.png" alt="Document PDF généré" />
+          <div class="screen-caption">
+            <span class="screen-num">04</span>
+            <div>
+              <div class="screen-title">Document PDF généré</div>
+              <div class="screen-desc">Note officielle de changement temporaire d'horaire avec en-tête INEO, tableau des nouveaux horaires par jour (matin, après-midi, total heures), total semaine et espace de signature — conforme et prête à être envoyée.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="screen-btn screen-prev" id="screenPrev" aria-label="Précédent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="screen-btn screen-next" id="screenNext" aria-label="Suivant">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+    <div class="screen-dots" id="screenDots">
+      <div class="screen-dot active"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+    </div>
+  </section>
+
+  <!-- ══ LOGIQUE CONDITIONNELLE ══ -->
+  <section class="cond-section reveal">
+    <div class="section-tag">Logique métier</div>
+    <h2 class="section-h2">Une condition qui change le document</h2>
+    <p class="section-intro">
+      Selon le profil du technicien concerné, le document généré n'est pas identique.
+      Deux conditions peuvent s'appliquer indépendamment et modifier
+      une ligne spécifique du PDF — celle relative à <strong style="color:var(--txt)">l'accord du salarié</strong>.
+    </p>
+
+    <div class="cond-grid">
+
+      <div class="cond-card">
+        <div class="cond-card-head">
+          <div class="cond-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="cond-label">Travail de nuit</div>
+            <div class="cond-sublabel">Condition 1</div>
+          </div>
+        </div>
+        <div class="cond-body">
+          <div class="cond-trigger">La modification implique des heures de nuit</div>
+          <div class="cond-desc">
+            Dès que la plage horaire renseignée par le responsable couvre des heures de nuit,
+            la condition se déclenche automatiquement via la logique PowerFX.
+          </div>
+          <div class="cond-result">
+            <span class="cond-result-arrow">→</span>
+            La ligne "Accord du salarié" est ajoutée dans le document PDF avec un espace de signature — l'accord explicite du technicien est requis réglementairement.
+          </div>
+        </div>
+      </div>
+
+      <div class="cond-card">
+        <div class="cond-card-head">
+          <div class="cond-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div>
+            <div class="cond-label">Délégué du personnel</div>
+            <div class="cond-sublabel">Condition 2</div>
+          </div>
+        </div>
+        <div class="cond-body">
+          <div class="cond-trigger">Le technicien concerné est délégué du personnel</div>
+          <div class="cond-desc">
+            Si le responsable identifie le technicien comme délégué du personnel dans le formulaire,
+            cette case coche active une règle spécifique dans le générateur de document.
+          </div>
+          <div class="cond-result">
+            <span class="cond-result-arrow">→</span>
+            La ligne "Accord du salarié" est insérée dans le PDF — le statut de représentant du personnel impose une validation préalable de l'intéressé.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ APERÇU DOCUMENT ══ -->
+  <section class="doc-section reveal">
+    <div class="section-tag">Document généré</div>
+    <h2 class="section-h2">Anatomie du PDF produit</h2>
+    <p class="section-intro">
+      L'application compose le document à la volée à partir des données saisies dans les deux formulaires.
+      Le résultat est un PDF conforme, prêt à être archivé et distribué.
+    </p>
+
+    <div class="doc-preview">
+
+      <!-- Maquette document -->
+      <div class="doc-mock">
+        <div class="doc-mock-bar">
+          <div class="doc-mock-title">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Note de modification horaire
+          </div>
+          <span class="doc-mock-badge">PDF généré</span>
+        </div>
+        <div class="doc-body">
+
+          <div class="doc-section-header">Informations générales</div>
+
+          <div class="doc-row">
+            <span class="doc-row-key">Date de création</span>
+            <span class="doc-row-val filled">04/05/2025</span>
+          </div>
+          <div class="doc-row">
+            <span class="doc-row-key">Responsable</span>
+            <span class="doc-row-val filled">M. Dupont — Chef de chantier</span>
+          </div>
+          <div class="doc-row">
+            <span class="doc-row-key">Site / Client</span>
+            <span class="doc-row-val filled">Site Nantes Nord — Client X</span>
+          </div>
+          <div class="doc-row">
+            <span class="doc-row-key">Technicien concerné</span>
+            <span class="doc-row-val filled">M. Martin — Technicien élec.</span>
+          </div>
+          <div class="doc-row">
+            <span class="doc-row-key">Motif</span>
+            <span class="doc-row-val filled">Intervention urgente hors plage</span>
+          </div>
+
+          <div class="doc-section-header" style="margin-top:6px;">Plages horaires modifiées</div>
+
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Horaire initial</th>
+                <th>Nouvel horaire</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="date">Lun. 06/05</td>
+                <td>07h00 – 15h30</td>
+                <td>22h00 – 06h00</td>
+              </tr>
+              <tr>
+                <td class="date">Mar. 07/05</td>
+                <td>07h00 – 15h30</td>
+                <td>22h00 – 06h00</td>
+              </tr>
+              <tr>
+                <td class="date">Mer. 08/05</td>
+                <td>—</td>
+                <td>22h00 – 06h00</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Ligne conditionnelle visible car travail de nuit -->
+          <div class="doc-row-cond">
+            <div class="doc-row-cond-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="doc-row-cond-text">
+              Accord du salarié : _____________________________ Date : __________
+              <span>Ligne générée automatiquement — condition "travail de nuit" active</span>
+            </div>
+          </div>
+
+          <div class="doc-section-header" style="margin-top:6px;">Signatures</div>
+          <div class="doc-row">
+            <span class="doc-row-key">Responsable</span>
+            <span class="doc-row-val placeholder">Signature ___________</span>
+          </div>
+          <div class="doc-row">
+            <span class="doc-row-key">Validation RH</span>
+            <span class="doc-row-val placeholder">Signature ___________</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Détails numérotés -->
+      <div class="doc-details">
+        <div class="doc-detail-item">
+          <div class="doc-detail-num">Formulaire 01</div>
+          <div class="doc-detail-title">Informations du document</div>
+          <div class="doc-detail-desc">Personnes concernées, site, client, responsable, date de création, motif de modification. Toutes les métadonnées du document.</div>
+        </div>
+        <div class="doc-detail-item">
+          <div class="doc-detail-num">Formulaire 02</div>
+          <div class="doc-detail-title">Plages horaires</div>
+          <div class="doc-detail-desc">Sélection de la période, dates concernées, horaire initial et nouvel horaire pour chaque jour. Saisie guidée par PowerFX.</div>
+        </div>
+        <div class="doc-detail-item" style="border-color:var(--cond-line);">
+          <div class="doc-detail-num" style="color:var(--cond);">Logique conditionnelle</div>
+          <div class="doc-detail-title">Ligne "Accord du salarié"</div>
+          <div class="doc-detail-desc">Insérée automatiquement si travail de nuit ou délégué du personnel. Invisible sinon — le document s'adapte au contexte.</div>
+        </div>
+        <div class="doc-detail-item" style="border-color:var(--pdf-line);">
+          <div class="doc-detail-num" style="color:var(--pdf);">Génération &amp; archivage</div>
+          <div class="doc-detail-title">PDF + stockage SharePoint</div>
+          <div class="doc-detail-desc">Le document est généré à la volée, enregistré en base SharePoint avec toutes les données saisies, puis récupéré par le flux d'envoi.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ PIPELINE ══ -->
+  <section class="pipeline-section reveal">
+    <div class="section-tag">Automatisation</div>
+    <h2 class="section-h2">Du formulaire à l'envoi automatique</h2>
+    <p style="font-size:15px;color:var(--txt-mid);line-height:1.8;max-width:680px;margin-bottom:0;">
+      Une fois les deux formulaires validés, le PDF est généré et stocké.
+      Un flux Power Automate prend le relais immédiatement pour notifier toutes les personnes concernées
+      avec le document en pièce jointe et un e-mail HTML structuré.
+    </p>
+
+    <div class="pipeline" style="margin-top:44px;">
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="pipeline-label">Formulaire 1</div>
+        <div class="pipeline-sub">Infos document</div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="pipeline-label">Formulaire 2</div>
+        <div class="pipeline-sub">Plages horaires</div>
+      </div>
+
+      <div class="pipeline-step highlight">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="pipeline-label">Génération PDF</div>
+        <div class="pipeline-sub">Conditionnel inclus</div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+        </div>
+        <div class="pipeline-label">Archivage SharePoint</div>
+        <div class="pipeline-sub">PDF + données</div>
+      </div>
+
+      <div class="pipeline-step">
+        <div class="pipeline-node">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="pipeline-label">Envoi e-mail</div>
+        <div class="pipeline-sub">PDF en pièce jointe</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ CONTENU + SIDEBAR ══ -->
+  <div class="proj-content">
+    <div class="proj-main">
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Contexte</div>
+        <h2 class="proj-section-title">Formaliser une obligation légale</h2>
+        <div class="proj-section-body">
+          <p>
+            Toute modification des horaires de travail d'un technicien doit faire l'objet
+            d'un document officiel transmis aux personnes concernées dans les délais réglementaires.
+            Avant cette application, ce document était saisi manuellement dans Word,
+            imprimé, signé puis scanné — un processus long, source d'erreurs et difficile à tracer.
+          </p>
+          <p>
+            L'objectif était de <strong>digitaliser entièrement la création de ce document</strong>
+            depuis l'application : saisie guidée, génération automatique du PDF conforme,
+            archivage en base et envoi instantané par e-mail aux personnes concernées,
+            le tout sans quitter Power Apps.
+          </p>
+        </div>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnement</div>
+        <h2 class="proj-section-title">Le flux de bout en bout</h2>
+        <ol class="proj-timeline">
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step">Formulaire 01</div>
+              <div class="ptl-title">Informations du document</div>
+              <div class="ptl-desc">Le responsable renseigne les données contextuelles : techniciens concernés, site d'intervention, nom du client, date de création, motif de la modification. Il coche également si le technicien est délégué du personnel — ce qui active la condition sur la ligne d'accord.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step">Formulaire 02</div>
+              <div class="ptl-title">Plages de dates et d'horaires</div>
+              <div class="ptl-desc">Le responsable sélectionne la période concernée et renseigne pour chaque jour les horaires initiaux et les nouveaux horaires. La saisie d'heures de nuit déclenche automatiquement la condition correspondante dans le générateur de document.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot pdf-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step pdf-step">Génération</div>
+              <div class="ptl-title">Création du document PDF</div>
+              <div class="ptl-desc">L'application compose le PDF à partir de toutes les données saisies. La logique conditionnelle PowerFX insère ou omet la ligne "Accord du salarié" selon les conditions actives. Le document généré est conforme, complet et prêt à être signé.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step">Archivage</div>
+              <div class="ptl-title">Enregistrement en base SharePoint</div>
+              <div class="ptl-desc">Le PDF généré est stocké dans SharePoint avec l'ensemble des données du formulaire : un historique complet des notes de modification est ainsi constitué, consultable à tout moment depuis l'application.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step">Envoi automatique</div>
+              <div class="ptl-title">E-mail aux personnes concernées</div>
+              <div class="ptl-desc">Un flux Power Automate récupère le document archivé et envoie un e-mail avec un template HTML structuré — récapitulatif des dates et heures modifiées — aux techniciens et aux parties concernées, avec le PDF en pièce jointe.</div>
+            </div>
+          </li>
+
+        </ol>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnalités</div>
+        <h2 class="proj-section-title">Ce que l'application apporte</h2>
+        <ul class="feat-list">
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Saisie guidée en deux formulaires</div>
+              <div class="feat-desc">Un premier formulaire pour les informations contextuelles, un second pour les plages horaires — la logique PowerFX assure la cohérence des données avant génération.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--cond)"></div>
+            <div>
+              <div class="feat-title">Logique conditionnelle sur le document</div>
+              <div class="feat-desc">Travail de nuit ou délégué du personnel : deux conditions détectées automatiquement qui insèrent la ligne "Accord du salarié" dans le PDF généré — sans action supplémentaire du responsable.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--pdf)"></div>
+            <div>
+              <div class="feat-title">Génération PDF à la volée</div>
+              <div class="feat-desc">Le document est composé dynamiquement depuis l'application — conforme, complet, avec les bonnes sections selon le contexte. Aucune mise en page manuelle n'est requise.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Archivage automatique en SharePoint</div>
+              <div class="feat-desc">Le PDF et toutes les données saisies sont stockés dans une liste SharePoint — un historique traçable et consultable de toutes les notes de modification émises.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Envoi e-mail automatisé avec pièce jointe</div>
+              <div class="feat-desc">Power Automate envoie le PDF en pièce jointe avec un template HTML Outlook récapitulant les dates et heures modifiées — directement aux techniciens et aux parties concernées.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Usage bureau exclusif</div>
+              <div class="feat-desc">Application conçue pour le personnel de bureau et les responsables — interface PC optimisée pour la saisie et la gestion des documents générés.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <aside class="proj-sidebar">
+
+      <div class="sidebar-block reveal">
+        <div class="sidebar-label">Statut</div>
+        <div class="proj-status">
+          <div class="status-dot"></div>
+          <span class="status-text">En production — INEO Atlantique</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Chiffres clés</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-num">2</div>
+            <div class="metric-label">Formulaires</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">2</div>
+            <div class="metric-label">Conditions logiques</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">1</div>
+            <div class="metric-label">PDF généré</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">0</div>
+            <div class="metric-label">Saisie manuelle</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Stack technique</div>
+        <ul class="stack-list">
+          <li class="stack-item">
+            <span class="stack-name">Power Apps</span>
+            <span class="stack-role">Frontend</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">PowerFX</span>
+            <span class="stack-role">Logique conditionnelle</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Power Automate</span>
+            <span class="stack-role">Flux d'envoi</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">SharePoint</span>
+            <span class="stack-role">Archivage</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Outlook</span>
+            <span class="stack-role">E-mail + pièce jointe</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">HTML / CSS</span>
+            <span class="stack-role">Template e-mail</span>
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </div>
+
+  </main>
+
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const N = 150, D = 150, R = 130;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function init() {
+        particles = [];
+        for (let i = 0; i < N; i++) particles.push({ x: Math.random()*W, y: Math.random()*H, vx: rand(-0.22,0.22), vy: rand(-0.18,0.18), r: rand(1.5,2.8), o: rand(0.55,0.95) });
+      }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        for (let i=0;i<particles.length;i++) for (let j=i+1;j<particles.length;j++) {
+          const a=particles[i],b=particles[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+          if(d<D){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(${EM},${(1-d/D)*0.22})`;ctx.lineWidth=0.8;ctx.stroke();}
+        }
+        particles.forEach(p => {
+          const mdx=mouse.x-p.x,mdy=mouse.y-p.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
+          if(md<R){const f=(1-md/R)*0.012;p.vx+=mdx*f;p.vy+=mdy*f;}
+          const s=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+          if(s<0.12){p.vx+=(Math.random()-.5)*.08;p.vy+=(Math.random()-.5)*.08;}
+          if(s>0.8){p.vx=p.vx/s*.8;p.vy=p.vy/s*.8;}
+          p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0){p.x=0;p.vx*=-1;}if(p.x>W){p.x=W;p.vx*=-1;}
+          if(p.y<0){p.y=0;p.vy*=-1;}if(p.y>H){p.y=H;p.vy*=-1;}
+          const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+          g.addColorStop(0,`rgba(${EM},${p.o*0.35})`);g.addColorStop(1,`rgba(${EM},0)`);
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r*4,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${EM},${p.o})`;ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize',resize);
+      window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+      resize();init();requestAnimationFrame(draw);
+    })();
+
+    const cursor=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+    (function tick(){cursor.style.left=mx+'px';cursor.style.top=my+'px';rx+=(mx-rx)*0.13;ry+=(my-ry)*0.13;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(tick);})();
+
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add('visible');obs.unobserve(e.target);});},{threshold:0.08});
+    document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+    /* ── Slider captures ── */
+    (function() {
+      const track  = document.getElementById('screensTrack');
+      const dots   = document.querySelectorAll('.screen-dot');
+      const slides = document.querySelectorAll('.screen-slide');
+      let current  = 0;
+      const total  = slides.length;
+
+      function goTo(n) {
+        current = (n + total) % total;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        /* Ajuste la position des boutons selon hauteur slide portrait */
+        const isPdf = slides[current].classList.contains('portrait');
+        document.querySelectorAll('.screen-btn').forEach(b => {
+          b.style.top = isPdf ? '280px' : '210px';
+        });
+      }
+
+      document.getElementById('screenPrev').addEventListener('click', () => goTo(current - 1));
+      document.getElementById('screenNext').addEventListener('click', () => goTo(current + 1));
+      dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+
+      let startX = 0;
+      track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      track.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1));
+      });
+    })();
+
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion de l'astreinte — Antoine Bonnet</title>
+  <meta name="description" content="Application Power Apps de gestion des astreintes — échange de planning entre techniciens, validation pair-à-pair, envoi hebdomadaire du planning PDF via API de conversion HTML→PDF, automatisations Power Automate." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-deep: #0d7a5a;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --line2:   rgba(45,212,160,0.16);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* Accents flux */
+      --accept: #4ade80;
+      --accept-bg: rgba(74,222,128,0.06);
+      --accept-line: rgba(74,222,128,0.20);
+      --refuse: #f87171;
+      --refuse-bg: rgba(248,113,113,0.06);
+      --refuse-line: rgba(248,113,113,0.20);
+      --pending: #fbbf24;
+      --pending-bg: rgba(251,191,36,0.06);
+      --pending-line: rgba(251,191,36,0.20);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    #particles-canvas {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    /* ─── CURSEUR ─────────────────────────────────────────────── */
+    #cursor {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--em); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .25s var(--ease), height .25s var(--ease);
+    }
+    #cursor-ring {
+      position: fixed; width: 32px; height: 32px;
+      border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: width .3s var(--ease), height .3s var(--ease), opacity .2s;
+    }
+    body:has(a:hover) #cursor,
+    body:has(button:hover) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring,
+    body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    /* ─── NAV ─────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8,15,12,0.88);
+      backdrop-filter: blur(16px);
+    }
+    .nav-logo {
+      font-family: var(--mono); font-size: 13px; font-weight: 500;
+      color: var(--em); letter-spacing: .04em; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      color: var(--txt-dim); text-decoration: none; text-transform: uppercase;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--txt); }
+    .nav-cta {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      color: var(--em); text-decoration: none; text-transform: uppercase;
+      border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px;
+      background: var(--em-bg); transition: background .2s, border-color .2s;
+    }
+    .nav-cta:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    /* ─── SUBNAV ─────────────────────────────────────────────── */
+    .proj-subnav {
+      position: fixed; top: 64px; left: 0; right: 0; z-index: 99;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 44px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8,15,12,0.80);
+      backdrop-filter: blur(12px);
+    }
+    .proj-subnav-link {
+      font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--txt-dim);
+      text-decoration: none; display: flex; align-items: center; gap: 8px;
+      transition: color .2s;
+    }
+    .proj-subnav-link:hover { color: var(--em); }
+    .proj-subnav-link svg { transition: transform .2s; }
+    .proj-subnav-link.prev:hover svg { transform: translateX(-3px); }
+    .proj-subnav-link.next:hover svg { transform: translateX(3px); }
+
+    /* ═══════════════════════════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════════════════════════ */
+    .proj-hero {
+      min-height: 78vh;
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: 108px 48px 96px;
+      position: relative;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-bg-num {
+      position: absolute; right: 48px; bottom: 40px;
+      font-family: var(--serif); font-size: 30vw; line-height: 1;
+      color: rgba(45,212,160,0.025); letter-spacing: -.05em;
+      pointer-events: none; user-select: none;
+    }
+    .proj-hero-breadcrumb {
+      font-family: var(--mono); font-size: 11px; color: var(--txt-dim);
+      letter-spacing: .1em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 36px;
+      animation: fadeUp .8s var(--ease) both;
+    }
+    .proj-hero-breadcrumb a { color: var(--txt-dim); text-decoration: none; transition: color .2s; }
+    .proj-hero-breadcrumb a:hover { color: var(--em); }
+    .proj-hero-breadcrumb span { color: var(--em); }
+    .proj-hero-title {
+      font-family: var(--serif);
+      font-size: clamp(48px, 7.5vw, 100px);
+      line-height: 1.3; letter-spacing: -.03em;
+      color: var(--txt); margin-bottom: 36px;
+      animation: fadeUp .8s .08s var(--ease) both;
+    }
+    .proj-hero-title em {
+      font-style: italic; display: block;
+      background: linear-gradient(135deg, var(--em), var(--em-dim));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; padding-right: 6px;
+    }
+    .proj-hero-meta {
+      display: flex; align-items: stretch; gap: 0;
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
+      animation: fadeUp .8s .18s var(--ease) both;
+    }
+    .meta-item {
+      display: flex; flex-direction: column; gap: 4px;
+      padding-right: 40px; margin-right: 40px;
+      border-right: 1px solid var(--line);
+    }
+    .meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .meta-key {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim);
+      letter-spacing: .14em; text-transform: uppercase;
+    }
+    .meta-val { font-size: 14px; color: var(--txt); font-weight: 500; }
+    .meta-val-em { color: var(--em); font-family: var(--mono); font-size: 13px; }
+    .proj-hero-tags {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-left: auto; align-items: flex-end;
+    }
+    .ptag {
+      font-family: var(--mono); font-size: 9px; letter-spacing: .06em;
+      text-transform: uppercase; padding: 4px 10px;
+      border: 1px solid var(--em-line); border-radius: 20px;
+      color: var(--em-dim); background: var(--em-bg);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       FLUX PAIR-À-PAIR — schéma visuel
+    ═══════════════════════════════════════════════════════════ */
+    .flux-section {
+      border-bottom: 1px solid var(--line);
+      padding: 80px 48px;
+    }
+    .flux-section .proj-section-tag {
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .18em; text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .flux-section .proj-section-tag::before {
+      content: ''; width: 20px; height: 1px; flex-shrink: 0;
+      background: var(--em);
+    }
+    .flux-section h2 {
+      font-family: var(--serif);
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.05; letter-spacing: -.02em;
+      color: var(--txt); margin-bottom: 8px;
+    }
+    .flux-section .flux-intro {
+      font-size: 15px; color: var(--txt-mid); line-height: 1.8;
+      max-width: 680px; margin-bottom: 52px;
+    }
+
+    /* Schéma de flux */
+    .flux-diagram {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      position: relative;
+    }
+
+    /* Colonne acteur */
+    .flux-actor {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0; flex-shrink: 0; width: 180px;
+    }
+    .flux-actor-bubble {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--em-line);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 2;
+    }
+    .flux-actor-bubble svg { color: var(--em); }
+    .flux-actor-name {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-mid);
+      letter-spacing: .08em; text-transform: uppercase;
+      margin-top: 10px; text-align: center;
+    }
+
+    /* Étapes verticales sous chaque acteur */
+    .flux-actor-steps {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0; margin-top: 20px; width: 100%;
+    }
+    .flux-step-node {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      position: relative; z-index: 2; flex-shrink: 0;
+      transition: border-color .2s;
+    }
+    .flux-step-node.active { border-color: var(--em); color: var(--em); }
+    .flux-step-node.accept { border-color: var(--accept); color: var(--accept); background: var(--accept-bg); }
+    .flux-step-node.refuse { border-color: var(--refuse); color: var(--refuse); background: var(--refuse-bg); }
+    .flux-step-connector {
+      width: 1px; height: 28px;
+      background: linear-gradient(180deg, var(--em-line), var(--line));
+      flex-shrink: 0;
+    }
+    .flux-step-connector.accept { background: linear-gradient(180deg, var(--accept-line), transparent); }
+    .flux-step-connector.refuse { background: linear-gradient(180deg, var(--refuse-line), transparent); }
+
+    .flux-step-label {
+      font-size: 11px; color: var(--txt-dim); text-align: center;
+      max-width: 130px; line-height: 1.4; margin-top: 6px; margin-bottom: 6px;
+    }
+
+    /* Flèches horizontales entre acteurs */
+    .flux-arrow-col {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start;
+      flex: 1; padding-top: 88px; /* aligne avec les steps */
+      gap: 0;
+    }
+    .flux-arrow {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; position: relative;
+    }
+    .flux-arrow-line {
+      flex: 1; height: 1px;
+      background: var(--em-line);
+    }
+    .flux-arrow-line.accept { background: var(--accept-line); }
+    .flux-arrow-line.refuse { background: var(--refuse-line); }
+    .flux-arrow-label {
+      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+      font-family: var(--mono); font-size: 9px; letter-spacing: .08em;
+      color: var(--txt-dim); white-space: nowrap; text-transform: uppercase;
+    }
+    .flux-arrow-label.accept { color: var(--accept); }
+    .flux-arrow-label.refuse { color: var(--refuse); }
+    .flux-arrow-spacer { height: 70px; } /* alignement vertical */
+
+    /* Colonne système / automate */
+    .flux-system {
+      display: flex; flex-direction: column; align-items: center;
+      flex-shrink: 0; width: 160px; padding-top: 88px;
+    }
+    .flux-system-node {
+      border-radius: 10px; padding: 12px 16px;
+      border: 1px solid var(--line); background: var(--surface);
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .08em; text-transform: uppercase;
+      text-align: center; line-height: 1.5; width: 100%;
+    }
+    .flux-system-node.accept { border-color: var(--accept-line); color: var(--accept); background: var(--accept-bg); }
+    .flux-system-node.refuse { border-color: var(--refuse-line); color: var(--refuse); background: var(--refuse-bg); }
+    .flux-system-connector {
+      width: 1px; height: 20px;
+      background: linear-gradient(180deg, var(--line), transparent);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CONTENU PRINCIPAL
+    ═══════════════════════════════════════════════════════════ */
+    .proj-content {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .proj-main {
+      padding: 96px 80px 96px 48px;
+      border-right: 1px solid var(--line);
+    }
+    .proj-section { margin-bottom: 72px; }
+    .proj-section:last-child { margin-bottom: 0; }
+    .proj-section-tag {
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .18em; text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .proj-section-tag::before {
+      content: ''; width: 20px; height: 1px; flex-shrink: 0;
+      background: var(--em);
+    }
+    .proj-section-title {
+      font-family: var(--serif);
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.05; letter-spacing: -.02em;
+      color: var(--txt); margin-bottom: 24px;
+    }
+    .proj-section-body {
+      font-size: 15px; color: var(--txt-mid); line-height: 1.85;
+    }
+    .proj-section-body p + p { margin-top: 16px; }
+    .proj-section-body strong { color: var(--txt); font-weight: 500; }
+
+    /* Timeline */
+    .proj-timeline { list-style: none; margin-top: 24px; }
+    .ptl-item {
+      display: grid; grid-template-columns: 28px 1fr;
+      gap: 16px; padding-bottom: 36px; position: relative;
+    }
+    .ptl-item:last-child { padding-bottom: 0; }
+    .ptl-item::before {
+      content: ''; position: absolute;
+      left: 13px; top: 28px; bottom: 0; width: 1px;
+      background: linear-gradient(180deg, var(--em-dim), transparent);
+    }
+    .ptl-item:last-child::before { display: none; }
+    .ptl-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--em);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 4px rgba(45,212,160,0.08);
+    }
+    .ptl-dot svg { width: 12px; height: 12px; color: var(--em); }
+    .ptl-dot.accept { border-color: var(--accept); box-shadow: 0 0 0 4px rgba(74,222,128,0.08); }
+    .ptl-dot.accept svg { color: var(--accept); }
+    .ptl-dot.refuse { border-color: var(--refuse); box-shadow: 0 0 0 4px rgba(248,113,113,0.08); }
+    .ptl-dot.refuse svg { color: var(--refuse); }
+    .ptl-step {
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .ptl-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 6px; }
+    .ptl-desc  { font-size: 14px; color: var(--txt-mid); line-height: 1.7; }
+
+    /* Sous-timeline pour les branches accept/refuse */
+    .ptl-branches {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-top: 16px;
+    }
+    .ptl-branch {
+      border-radius: 10px; padding: 16px;
+      border: 1px solid var(--line); background: var(--bg2);
+    }
+    .ptl-branch.accept { border-color: var(--accept-line); background: var(--accept-bg); }
+    .ptl-branch.refuse { border-color: var(--refuse-line); background: var(--refuse-bg); }
+    .ptl-branch-title {
+      font-size: 13px; font-weight: 500; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ptl-branch.accept .ptl-branch-title { color: var(--accept); }
+    .ptl-branch.refuse .ptl-branch-title { color: var(--refuse); }
+    .ptl-branch-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* Fonctionnalités */
+    .feat-list {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 0;
+      margin-top: 24px;
+      border: 1px solid var(--line); border-radius: 10px;
+      overflow: hidden;
+    }
+    .feat-item {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      transition: background .25s;
+    }
+    .feat-item:last-child { border-bottom: none; }
+    .feat-item:hover { background: var(--bg2); }
+    .feat-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--em); flex-shrink: 0; margin-top: 7px;
+    }
+    .feat-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .feat-desc  { font-size: 13px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* ─── Bloc données croisées ──────────────────────────────── */
+    .data-sources {
+      margin-top: 28px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .data-source-card {
+      border-radius: 10px; padding: 20px;
+      border: 1px solid var(--line); background: var(--surface);
+      position: relative; overflow: hidden;
+      transition: border-color .2s;
+    }
+    .data-source-card:hover { border-color: var(--em-line); }
+    .data-source-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--em), transparent);
+    }
+    .data-source-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--em-bg); border: 1px solid var(--em-line);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+    }
+    .data-source-icon svg { color: var(--em); }
+    .data-source-name {
+      font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 4px;
+    }
+    .data-source-desc {
+      font-size: 12px; color: var(--txt-mid); line-height: 1.55;
+    }
+    .data-source-tags {
+      display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;
+    }
+    .data-source-tag {
+      font-family: var(--mono); font-size: 8px; letter-spacing: .08em;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 20px;
+      border: 1px solid var(--em-line); color: var(--em-dim); background: var(--em-bg);
+    }
+
+    /* ── Sidebar ── */
+    .proj-sidebar {
+      padding: 96px 48px;
+      display: flex; flex-direction: column; gap: 48px;
+    }
+    .sidebar-block {}
+    .sidebar-label {
+      font-family: var(--mono); font-size: 9px; color: var(--em);
+      letter-spacing: .18em; text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--line2), transparent);
+    }
+    .stack-list {
+      list-style: none; display: flex; flex-direction: column; gap: 10px;
+    }
+    .stack-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 8px; transition: border-color .2s;
+    }
+    .stack-item:hover { border-color: var(--em-line); }
+    .stack-name { font-size: 13px; color: var(--txt); font-weight: 500; }
+    .stack-role { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); }
+    .metrics-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .metric-card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 10px; padding: 18px 16px;
+      position: relative; overflow: hidden;
+    }
+    .metric-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--em), transparent);
+    }
+    .metric-num {
+      font-family: var(--serif); font-size: 32px; line-height: 1;
+      letter-spacing: -.02em; color: var(--txt);
+    }
+    .metric-num em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--em), var(--em-dim));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .metric-label {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim);
+      letter-spacing: .1em; text-transform: uppercase; margin-top: 6px;
+    }
+    .proj-status {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px;
+      background: rgba(45,212,160,0.06); border: 1px solid rgba(45,212,160,0.2);
+      border-radius: 8px;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--em); flex-shrink: 0;
+      animation: statusPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes statusPulse {
+      0%  { box-shadow: 0 0 0 0   rgba(45,212,160,.5); }
+      70% { box-shadow: 0 0 0 6px rgba(45,212,160,0); }
+      100%{ box-shadow: 0 0 0 0   rgba(45,212,160,0); }
+    }
+    .status-text { font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .06em; }
+
+    /* ─── FOOTER ─────────────────────────────────────────────── */
+    footer {
+      padding: 22px 48px; border-top: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em; }
+    .footer-back {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      text-decoration: none; letter-spacing: .08em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px; transition: color .2s;
+    }
+    .footer-back:hover { color: var(--em); }
+
+    /* ─── ANIMATIONS ─────────────────────────────────────────── */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .8s var(--ease), transform .8s var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .1s; }
+    .rd2 { transition-delay: .2s; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────── */
+
+    /* ═══ SLIDER INTERACTIF ASTREINTE ═══ */
+    .screens-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+    .screens-header { margin-bottom: 36px; }
+    .screen-home-wrap { border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); overflow: hidden; margin-bottom: 28px; }
+    .screen-home-wrap img { width: 100%; height: 420px; display: block; object-fit: contain; object-position: center; background: var(--bg2); }
+    .screen-home-caption { display: flex; align-items: flex-start; gap: 14px; padding: 16px 22px; background: var(--surface); border-top: 1px solid var(--line); }
+    .screen-home-num { font-family: var(--mono); font-size: 10px; color: var(--em); letter-spacing: .14em; flex-shrink: 0; margin-top: 2px; }
+    .screen-home-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .screen-home-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+    .screen-selector { display: flex; gap: 12px; margin-bottom: 24px; }
+    .screen-sel-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 20px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface); font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-dim); cursor: pointer; transition: border-color .2s, color .2s, background .2s; }
+    .screen-sel-btn:hover { border-color: var(--em-line); color: var(--txt); }
+    .screen-sel-btn.active { border-color: var(--em); color: var(--em); background: var(--em-bg); }
+    .screen-panel { display: none; }
+    .screen-panel.active { display: block; }
+    .screens-slider-wrap { position: relative; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); overflow: hidden; }
+    .screens-track { display: flex; transition: transform .55s cubic-bezier(0.16,1,0.3,1); will-change: transform; }
+    .screen-slide { flex: 0 0 100%; display: flex; flex-direction: column; }
+    .screen-slide.bureau img { width: 100%; height: 420px; display: block; object-fit: contain; object-position: center; background: var(--bg2); border-bottom: 1px solid var(--line); }
+    .screen-slide.tel img { width: 100%; height: 520px; display: block; object-fit: contain; object-position: center; background: var(--bg2); border-bottom: 1px solid var(--line); }
+    .screen-caption { display: flex; align-items: flex-start; gap: 16px; padding: 16px 22px; background: var(--surface); }
+    .screen-num { font-family: var(--mono); font-size: 10px; color: var(--em); letter-spacing: .14em; flex-shrink: 0; margin-top: 2px; }
+    .screen-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .screen-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+    .screen-btn { position: absolute; top: 210px; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--em-line); background: rgba(8,15,12,0.82); backdrop-filter: blur(8px); color: var(--txt); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s, border-color .2s, color .2s; z-index: 2; }
+    .screen-btn:hover { background: var(--em-bg); border-color: var(--em); color: var(--em); }
+    .screen-prev { left: 14px; } .screen-next { right: 14px; }
+    .screen-panel.tel-panel .screen-btn { top: 260px; }
+    .screen-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }
+    .screen-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--txt-dim); cursor: pointer; transition: background .2s, transform .2s; }
+    .screen-dot.active { background: var(--em); transform: scale(1.4); }
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .proj-hero { padding-left: 20px; padding-right: 20px; }
+      .proj-hero-meta { flex-wrap: wrap; gap: 20px; }
+      .meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+      .proj-hero-tags { margin-left: 0; margin-top: 16px; }
+      .flux-section { padding: 48px 20px; }
+      .flux-diagram { flex-direction: column; align-items: stretch; }
+      .ptl-branches { grid-template-columns: 1fr; }
+      .data-sources { grid-template-columns: 1fr; }
+      .proj-content { grid-template-columns: 1fr; }
+      .proj-main { padding: 60px 20px; border-right: none; }
+      .proj-sidebar { padding: 0 20px 60px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <!-- ── NAV ──────────────────────────────────────────────────── -->
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="projects.html">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <!-- ── SUBNAV ───────────────────────────────────────────────── -->
+  <div class="proj-subnav">
+    <a href="project03.html" class="proj-subnav-link prev">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M6 2L1 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Projet précédent — Intégration des collaborateurs
+    </a>
+    <a href="project05.html" class="proj-subnav-link next">
+      Projet suivant — Vêtements de travail
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <!-- ══ HERO ════════════════════════════════════════════════════ -->
+  <div class="proj-hero">
+    
+    
+
+    <div class="proj-hero-breadcrumb">
+      <a href="index.html">Accueil</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <a href="index.html">Projets</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Gestion de l'astreinte</span>
+    </div>
+
+    <h1 class="proj-hero-title">
+      Gestion<br><em>de l'astreinte</em>
+    </h1>
+
+    <div class="proj-hero-meta">
+      <div class="meta-item">
+        <span class="meta-key">Contexte</span>
+        <span class="meta-val">INEO Atlantique Services</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Période</span>
+        <span class="meta-val">2024 → En production</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Rôle</span>
+        <span class="meta-val">Développeur seul</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Statut</span>
+        <span class="meta-val meta-val-em">● Déployé</span>
+      </div>
+      <div class="proj-hero-tags">
+        <span class="ptag">Power Apps</span>
+        <span class="ptag">Power Automate</span>
+        <span class="ptag">SharePoint</span>
+        <span class="ptag">Outlook</span>
+        <span class="ptag">PowerFX</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDER INTERACTIF ══ -->
+  <section class="screens-section reveal">
+    <div class="screens-header">
+      <div class="proj-section-tag">Aperçu de l'application</div>
+      <h2 class="proj-section-title" style="margin-bottom:6px;">L'interface en images</h2>
+      <p style="font-size:14px;color:var(--txt-mid);">Captures réelles de l'application Power Apps — interface bureau et mobile.</p>
+    </div>
+
+    <!-- Accueil commun -->
+    <div class="screen-home-wrap">
+      <img src="image/Home_astre.png" alt="Écran d'accueil — Gestion de l'astreinte" />
+      <div class="screen-home-caption">
+        <span class="screen-home-num">00</span>
+        <div>
+          <div class="screen-home-title">Écran d'accueil — commun aux deux profils</div>
+          <div class="screen-home-desc">Point d'entrée de l'application : accès à l'espace Cadre ou Technicien, consultation du planning annuel, proposition et validation de modification de planning, planning de la semaine.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sélecteur -->
+    <div class="screen-selector">
+      <button class="screen-sel-btn" id="selBureau" data-panel="bureau-panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Interface bureau — Cadre
+      </button>
+      <button class="screen-sel-btn" id="selTel" data-panel="tel-panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        Interface mobile — Technicien
+      </button>
+    </div>
+
+    <!-- Slider Bureau (Cadre) — 2 écrans landscape -->
+    <div class="screen-panel bureau-panel" id="bureau-panel">
+      <div class="screens-slider-wrap">
+        <div class="screens-track" id="trackBureau">
+
+          <div class="screen-slide bureau">
+            <img src="image/dem_astr_cadre.png" alt="Demande de modification — Cadre bureau" />
+            <div class="screen-caption">
+              <span class="screen-num">01</span>
+              <div>
+                <div class="screen-title">Formulaire de demande — Interface Cadre</div>
+                <div class="screen-desc">Le cadre sélectionne le numéro de semaine, visualise les jours concernés, renseigne son nom, son équipe, son remplaçant et le(s) jour(s) à permuter. Validation en un clic.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen-slide bureau">
+            <img src="image/valid_dem_astr_cadre.png" alt="Validation de demande — Cadre bureau" />
+            <div class="screen-caption">
+              <span class="screen-num">02</span>
+              <div>
+                <div class="screen-title">Validation d'une demande reçue — Interface Cadre</div>
+                <div class="screen-desc">Vue de la demande entrante avec date, demandeur, semaine, équipe et détail des jours. Deux boutons clairs — Approuver ou Refuser — déclenchent le flux Power Automate correspondant.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <button class="screen-btn screen-prev" id="prevBureau" aria-label="Précédent">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="screen-btn screen-next" id="nextBureau" aria-label="Suivant">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="screen-dots" id="dotsBureau">
+        <div class="screen-dot active"></div>
+        <div class="screen-dot"></div>
+      </div>
+    </div>
+
+    <!-- Slider Mobile (Technicien) — 3 écrans portrait -->
+    <div class="screen-panel tel-panel" id="tel-panel">
+      <div class="screens-slider-wrap">
+        <div class="screens-track" id="trackTel">
+
+          <div class="screen-slide tel">
+            <img src="image/demande_astr_tech.png" alt="Demande de modification — Technicien mobile" />
+            <div class="screen-caption">
+              <span class="screen-num">01</span>
+              <div>
+                <div class="screen-title">Formulaire de demande — Interface Technicien</div>
+                <div class="screen-desc">Version mobile du formulaire de demande : numéro de semaine, jours concernés, équipe et remplaçant sélectionnable parmi les collègues. Adapté à la saisie terrain.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen-slide tel">
+            <img src="image/liste_dem_tech.png" alt="Liste des demandes reçues — Technicien mobile" />
+            <div class="screen-caption">
+              <span class="screen-num">02</span>
+              <div>
+                <div class="screen-title">Liste des demandes reçues — Interface Technicien</div>
+                <div class="screen-desc">Vue de toutes les demandes de modification en attente de traitement : date, demandeur, équipe d'astreinte. Accès au détail via "Traiter la demande".</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="screen-slide tel">
+            <img src="image/valid_dem_tech.png" alt="Validation de demande — Technicien mobile" />
+            <div class="screen-caption">
+              <span class="screen-num">03</span>
+              <div>
+                <div class="screen-title">Validation d'une demande — Interface Technicien</div>
+                <div class="screen-desc">Détail de la demande reçue avec toutes les dates de la semaine concernée. Boutons Approuver / Refuser déclenchant le flux Power Automate de notification.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <button class="screen-btn screen-prev" id="prevTel" aria-label="Précédent">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="screen-btn screen-next" id="nextTel" aria-label="Suivant">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="screen-dots" id="dotsTel">
+        <div class="screen-dot active"></div>
+        <div class="screen-dot"></div>
+        <div class="screen-dot"></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══ FLUX PAIR-À-PAIR ══════════════════════════════════════ -->
+  <section class="flux-section reveal">
+    <div class="proj-section-tag">Principe clé</div>
+    <h2>Échange direct entre techniciens, sans hiérarchie</h2>
+    <p class="flux-intro">
+      Le cœur de l'application repose sur un <strong style="color:var(--txt)">mécanisme pair-à-pair</strong> :
+      un technicien fait une demande de remplacement à un collègue,
+      ce dernier valide ou refuse depuis son application,
+      et les bases de données se mettent à jour automatiquement selon la réponse.
+      Aucune intervention du responsable n'est nécessaire.
+    </p>
+
+    <!-- Schéma texte + branches accept/refuse -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px;">
+
+      <!-- Branche positive -->
+      <div style="border:1px solid var(--accept-line);border-radius:12px;overflow:hidden;">
+        <div style="padding:16px 20px;background:var(--accept-bg);border-bottom:1px solid var(--accept-line);display:flex;align-items:center;gap:10px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accept)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--accept);letter-spacing:.10em;text-transform:uppercase;">Réponse positive</span>
+        </div>
+        <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;color:var(--txt-mid);line-height:1.6;">Le collègue accepte la demande. Un flux Power Automate :</div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt-mid);">
+              <span style="color:var(--accept);margin-top:2px;flex-shrink:0;">→</span>
+              Met à jour les deux bases de données (astreinte + congés)
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt-mid);">
+              <span style="color:var(--accept);margin-top:2px;flex-shrink:0;">→</span>
+              Actualise le planning d'astreinte annuel partagé
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt-mid);">
+              <span style="color:var(--accept);margin-top:2px;flex-shrink:0;">→</span>
+              Notifie les deux techniciens de la confirmation
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Branche négative -->
+      <div style="border:1px solid var(--refuse-line);border-radius:12px;overflow:hidden;">
+        <div style="padding:16px 20px;background:var(--refuse-bg);border-bottom:1px solid var(--refuse-line);display:flex;align-items:center;gap:10px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--refuse)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--refuse);letter-spacing:.10em;text-transform:uppercase;">Réponse négative</span>
+        </div>
+        <div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;color:var(--txt-mid);line-height:1.6;">Le collègue refuse la demande. Un flux Power Automate :</div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt-mid);">
+              <span style="color:var(--refuse);margin-top:2px;flex-shrink:0;">→</span>
+              Notifie le demandeur du refus par e-mail
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt-mid);">
+              <span style="color:var(--refuse);margin-top:2px;flex-shrink:0;">→</span>
+              Ne modifie aucune donnée dans les bases de données
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--txt-mid);">
+              <span style="color:var(--refuse);margin-top:2px;flex-shrink:0;">→</span>
+              L'invite à effectuer une nouvelle demande auprès d'un autre collègue
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ CONTENU + SIDEBAR ═══════════════════════════════════════ -->
+  <div class="proj-content">
+
+    <div class="proj-main">
+
+      <!-- Contexte -->
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Contexte</div>
+        <h2 class="proj-section-title">Responsabiliser sans désorganiser</h2>
+        <div class="proj-section-body">
+          <p>
+            Les techniciens en charge de l'astreinte avaient besoin de flexibilité pour
+            s'organiser entre eux — des imprévus, des contraintes personnelles ou des
+            chevauchements avec des congés rendaient parfois nécessaire l'échange d'une semaine d'astreinte.
+          </p>
+          <p>
+            Avant cette application, chaque modification passait par le responsable d'équipe,
+            qui devait valider, ajuster le planning Excel partagé et prévenir les personnes concernées.
+            L'objectif : <strong>donner aux techniciens l'autonomie de gérer ces échanges eux-mêmes</strong>,
+            tout en garantissant que les bases de données et le planning restent toujours à jour et cohérents.
+          </p>
+        </div>
+      </div>
+
+      <!-- Timeline du flux complet -->
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnement</div>
+        <h2 class="proj-section-title">Le flux de bout en bout</h2>
+        <ol class="proj-timeline">
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">Étape 01</div>
+              <div class="ptl-title">Demande de remplacement</div>
+              <div class="ptl-desc">
+                Le technicien demandeur remplit un formulaire dans l'application : il sélectionne
+                la période d'astreinte sur laquelle il souhaite être remplacé, choisit le collègue
+                à solliciter parmi les techniciens disponibles et saisit un motif si nécessaire.
+              </div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.3 2 2 0 0 1 3.59 2h3a2 2 0 0 1 2 1.72c.2.75.45 1.49.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.83.61 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">Étape 02</div>
+              <div class="ptl-title">Notification du collègue sollicité</div>
+              <div class="ptl-desc">
+                Un flux Power Automate envoie immédiatement un e-mail au collègue désigné.
+                La demande apparaît également dans son application sous forme de notification,
+                avec les détails de la période concernée.
+              </div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">Étape 03</div>
+              <div class="ptl-title">Réponse du collègue (validation ou refus)</div>
+              <div class="ptl-desc">
+                Le collègue consulte la demande dans son application et répond en un clic —
+                validation ou refus — depuis sa propre interface.
+                Sa décision déclenche automatiquement le flux approprié.
+              </div>
+
+              <div class="ptl-branches">
+                <div class="ptl-branch accept">
+                  <div class="ptl-branch-title">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Accepté
+                  </div>
+                  <div class="ptl-branch-desc">Les bases de données sont mises à jour, le planning annuel partagé est actualisé, les deux techniciens sont notifiés. Le planning hebdomadaire sera inclus dans le prochain envoi PDF automatique.</div>
+                </div>
+                <div class="ptl-branch refuse">
+                  <div class="ptl-branch-title">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Refusé
+                  </div>
+                  <div class="ptl-branch-desc">Aucune modification des données. Le demandeur est notifié du refus et invité à solliciter un autre collègue.</div>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="ptl-content">
+              <div class="ptl-step">En continu</div>
+              <div class="ptl-title">Planning annuel personnalisé</div>
+              <div class="ptl-desc">
+                Chaque technicien dispose en permanence de son planning annuel dans l'application,
+                consolidant ses semaines d'astreinte, ses congés payés, ses RTT et autres absences.
+                Ce planning est alimenté en temps réel par les deux bases de données croisées.
+              </div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div>
+              <div class="ptl-step">Chaque semaine — Flux programmé</div>
+              <div class="ptl-title">Envoi du planning d'astreinte en PDF</div>
+              <div class="ptl-desc">
+                Un flux Power Automate programmé hebdomadairement génère le planning d'astreinte de la semaine à venir.
+                Le planning est d'abord composé sous forme de <strong style="color:var(--txt)">template HTML</strong>,
+                puis converti en PDF via un appel à une <strong style="color:var(--txt)">API externe de conversion HTML → PDF</strong>.
+                Le document est ensuite envoyé en pièce jointe par e-mail à tous les techniciens concernés,
+                avec un template HTML récapitulant les informations clés de la semaine.
+              </div>
+              <!-- Pipeline inline pour ce flux -->
+              <div style="margin-top:16px;display:flex;align-items:center;gap:0;flex-wrap:wrap;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px;text-align:center;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:var(--surface);border:1.5px solid var(--em-line);display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                  <span style="font-family:var(--mono);font-size:8px;color:var(--txt-dim);letter-spacing:.08em;text-transform:uppercase;line-height:1.3;">Flux<br>programmé</span>
+                </div>
+                <div style="flex:1;height:1px;background:var(--em-line);min-width:16px;"></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px;text-align:center;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:var(--surface);border:1.5px solid var(--em-line);display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  </div>
+                  <span style="font-family:var(--mono);font-size:8px;color:var(--txt-dim);letter-spacing:.08em;text-transform:uppercase;line-height:1.3;">Template<br>HTML</span>
+                </div>
+                <div style="flex:1;height:1px;background:var(--em-line);min-width:16px;"></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px;text-align:center;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:var(--surface);border:1.5px solid var(--em);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px rgba(45,212,160,0.08);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  </div>
+                  <span style="font-family:var(--mono);font-size:8px;color:var(--em);letter-spacing:.08em;text-transform:uppercase;line-height:1.3;">API HTML<br>→ PDF</span>
+                </div>
+                <div style="flex:1;height:1px;background:var(--em-line);min-width:16px;"></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:90px;text-align:center;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:var(--surface);border:1.5px solid var(--em-line);display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--em)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  </div>
+                  <span style="font-family:var(--mono);font-size:8px;color:var(--txt-dim);letter-spacing:.08em;text-transform:uppercase;line-height:1.3;">Envoi PDF<br>pièce jointe</span>
+                </div>
+              </div>
+            </div>
+          </li>
+
+        </ol>
+      </div>
+
+      <!-- Données croisées -->
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Architecture</div>
+        <h2 class="proj-section-title">Deux bases de données interconnectées</h2>
+        <div class="proj-section-body">
+          <p>
+            L'application d'astreinte est conçue pour fonctionner en tandem avec l'application
+            de gestion des congés. Le planning personnalisé de chaque technicien est construit
+            en croisant ces deux sources de données en temps réel.
+          </p>
+        </div>
+        <div class="data-sources">
+          <div class="data-source-card">
+            <div class="data-source-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/>
+                <path d="M3 12a9 3 0 0 0 18 0"/>
+              </svg>
+            </div>
+            <div class="data-source-name">Base de données Astreinte</div>
+            <div class="data-source-desc">Planning annuel des semaines d'astreinte, historique des échanges, demandes en cours et résultats des validations.</div>
+            <div class="data-source-tags">
+              <span class="data-source-tag">SharePoint</span>
+              <span class="data-source-tag">Propre à l'app</span>
+            </div>
+          </div>
+          <div class="data-source-card">
+            <div class="data-source-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="data-source-name">Base de données Congés</div>
+            <div class="data-source-desc">Congés payés, RTT, absences et T0 de chaque collaborateur, issus directement de l'application de gestion des congés.</div>
+            <div class="data-source-tags">
+              <span class="data-source-tag">SharePoint</span>
+              <span class="data-source-tag">App congés</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fonctionnalités -->
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnalités</div>
+        <h2 class="proj-section-title">Ce que l'application fait</h2>
+        <ul class="feat-list">
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Échange de planning pair-à-pair</div>
+              <div class="feat-desc">Un technicien soumet une demande de remplacement à un collègue via un formulaire intégré — sans intervention du responsable d'équipe.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Validation ou refus en un clic</div>
+              <div class="feat-desc">Le collègue sollicité reçoit une notification et répond depuis son application. Sa réponse déclenche automatiquement le flux correspondant.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Mise à jour automatique des bases de données</div>
+              <div class="feat-desc">En cas d'acceptation, Power Automate met à jour les données d'astreinte et actualise le planning annuel partagé sans aucune action manuelle.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Planning annuel personnalisé</div>
+              <div class="feat-desc">Chaque technicien visualise son planning complet : astreintes, congés payés, RTT, T0 et absences — tout au même endroit, en temps réel.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Planning d'astreinte annuel partagé</div>
+              <div class="feat-desc">Une vue globale du planning d'astreinte de l'équipe est accessible à tous les techniciens depuis l'application, toujours synchronisée avec les derniers échanges validés.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Notifications automatiques à chaque étape</div>
+              <div class="feat-desc">Demande envoyée, réponse reçue, planning mis à jour ou refus avec invitation à réessayer — chaque événement génère une notification e-mail ciblée via Power Automate.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em)"></div>
+            <div>
+              <div class="feat-title">Envoi hebdomadaire du planning en PDF</div>
+              <div class="feat-desc">Un flux Power Automate programmé génère chaque semaine le planning d'astreinte sous forme de template HTML, le convertit en PDF via une API externe HTML→PDF, et l'envoie en pièce jointe à tous les techniciens concernés.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div><!-- /proj-main -->
+
+    <!-- Sidebar -->
+    <aside class="proj-sidebar">
+
+      <div class="sidebar-block reveal">
+        <div class="sidebar-label">Statut</div>
+        <div class="proj-status">
+          <div class="status-dot"></div>
+          <span class="status-text">En production — INEO Atlantique</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Chiffres clés</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-num">3<em>+</em></div>
+            <div class="metric-label">Flux automatisés</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">2</div>
+            <div class="metric-label">Bases de données</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">0</div>
+            <div class="metric-label">Action manuelle</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">∞</div>
+            <div class="metric-label">Échanges possibles</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Stack technique</div>
+        <ul class="stack-list">
+          <li class="stack-item">
+            <span class="stack-name">Power Apps</span>
+            <span class="stack-role">Frontend</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Power Automate</span>
+            <span class="stack-role">Workflows</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">SharePoint</span>
+            <span class="stack-role">Base de données</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Outlook / Office 365</span>
+            <span class="stack-role">Notifications</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">API HTML → PDF</span>
+            <span class="stack-role">Conversion document</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">PowerFX</span>
+            <span class="stack-role">Logique métier</span>
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </div><!-- /proj-content -->
+
+  </main>
+
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <script>
+    /* ── Particules ── */
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const PARTICLE_COUNT = 150;
+      const CONNECTION_DIST = 150;
+      const MOUSE_RADIUS = 130;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function createParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          particles.push({ x: Math.random()*W, y: Math.random()*H, vx: rand(-0.22,0.22), vy: rand(-0.18,0.18), r: rand(1.5,2.8), opacity: rand(0.55,0.95) });
+        }
+      }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        for (let i=0;i<particles.length;i++) {
+          for (let j=i+1;j<particles.length;j++) {
+            const a=particles[i],b=particles[j];
+            const dx=a.x-b.x,dy=a.y-b.y,dist=Math.sqrt(dx*dx+dy*dy);
+            if (dist<CONNECTION_DIST) {
+              ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+              ctx.strokeStyle=`rgba(${EM},${(1-dist/CONNECTION_DIST)*0.22})`;
+              ctx.lineWidth=0.8;ctx.stroke();
+            }
+          }
+        }
+        particles.forEach(p => {
+          const mdx=mouse.x-p.x,mdy=mouse.y-p.y,mdist=Math.sqrt(mdx*mdx+mdy*mdy);
+          if (mdist<MOUSE_RADIUS){const f=(1-mdist/MOUSE_RADIUS)*0.012;p.vx+=mdx*f;p.vy+=mdy*f;}
+          const speed=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+          if(speed<0.12){p.vx+=(Math.random()-.5)*.08;p.vy+=(Math.random()-.5)*.08;}
+          if(speed>0.8){p.vx=p.vx/speed*.8;p.vy=p.vy/speed*.8;}
+          p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0){p.x=0;p.vx*=-1;}if(p.x>W){p.x=W;p.vx*=-1;}
+          if(p.y<0){p.y=0;p.vy*=-1;}if(p.y>H){p.y=H;p.vy*=-1;}
+          const glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+          glow.addColorStop(0,`rgba(${EM},${p.opacity*0.35})`);
+          glow.addColorStop(1,`rgba(${EM},0)`);
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r*4,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+          ctx.fillStyle=`rgba(${EM},${p.opacity})`;ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize',resize);
+      window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+      resize();createParticles();requestAnimationFrame(draw);
+    })();
+
+    /* ── Curseur ── */
+    const cursor=document.getElementById('cursor');
+    const ring=document.getElementById('cursor-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+    (function tick(){
+      cursor.style.left=mx+'px';cursor.style.top=my+'px';
+      rx+=(mx-rx)*0.13;ry+=(my-ry)*0.13;
+      ring.style.left=rx+'px';ring.style.top=ry+'px';
+      requestAnimationFrame(tick);
+    })();
+
+    /* ── Reveal scroll ── */
+    const obs=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add('visible');obs.unobserve(e.target);});
+    },{threshold:0.08});
+    document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+    /* ── Slider interactif astreinte ── */
+    (function() {
+      const selBtns = document.querySelectorAll('.screen-sel-btn');
+      const panels  = document.querySelectorAll('.screen-panel');
+
+      selBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.panel;
+          selBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          panels.forEach(p => p.classList.toggle('active', p.id === target));
+        });
+      });
+
+      function makeSlider(trackId, prevId, nextId, dotsId) {
+        const track = document.getElementById(trackId);
+        const prev  = document.getElementById(prevId);
+        const next  = document.getElementById(nextId);
+        const dots  = document.querySelectorAll('#' + dotsId + ' .screen-dot');
+        if (!track) return;
+        const total = track.querySelectorAll('.screen-slide').length;
+        let current = 0;
+        function goTo(n) {
+          current = (n + total) % total;
+          track.style.transform = 'translateX(-' + (current * 100) + '%)';
+          dots.forEach((d, i) => d.classList.toggle('active', i === current));
+        }
+        prev.addEventListener('click', () => goTo(current - 1));
+        next.addEventListener('click', () => goTo(current + 1));
+        dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+        let startX = 0;
+        track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - startX; if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1)); });
+      }
+
+      makeSlider('trackBureau', 'prevBureau', 'nextBureau', 'dotsBureau');
+      makeSlider('trackTel',    'prevTel',    'nextTel',    'dotsTel');
+    })();
+
+  </script>
+
+</body>
+</html>

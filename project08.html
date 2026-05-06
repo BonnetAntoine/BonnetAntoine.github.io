@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automatisation d'envoi e-mail — Antoine Bonnet</title>
+  <meta name="description" content="Remplacement du VBA Outlook par une macro Excel déclenchée au clic — extraction des données, envoi dans SharePoint, flux Power Automate ciblant le bon client et le bon interlocuteur." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --line2:   rgba(45,212,160,0.16);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* Excel vert */
+      --xl:      #22c55e;
+      --xl-bg:   rgba(34,197,94,0.06);
+      --xl-line: rgba(34,197,94,0.22);
+
+      /* VBA / code */
+      --vba:     #a78bfa;
+      --vba-bg:  rgba(167,139,250,0.06);
+      --vba-line: rgba(167,139,250,0.20);
+
+      /* SharePoint bleu */
+      --sp:      #7dd3fc;
+      --sp-bg:   rgba(125,211,252,0.06);
+      --sp-line: rgba(125,211,252,0.20);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--txt); font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; cursor: none; }
+
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    #cursor { position: fixed; width: 8px; height: 8px; background: var(--em); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width .25s var(--ease), height .25s var(--ease); }
+    #cursor-ring { position: fixed; width: 32px; height: 32px; border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: width .3s var(--ease), height .3s var(--ease), opacity .2s; }
+    body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.88); backdrop-filter: blur(16px); }
+    .nav-logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--em); letter-spacing: .04em; text-decoration: none; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--txt-dim); text-decoration: none; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover { color: var(--txt); }
+    .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--em); text-decoration: none; text-transform: uppercase; border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px; background: var(--em-bg); transition: background .2s, border-color .2s; }
+    .nav-cta:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    .proj-subnav { position: fixed; top: 64px; left: 0; right: 0; z-index: 99; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 44px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.80); backdrop-filter: blur(12px); }
+    .proj-subnav-link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-dim); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color .2s; }
+    .proj-subnav-link:hover { color: var(--em); }
+    .proj-subnav-link svg { transition: transform .2s; }
+    .proj-subnav-link.prev:hover svg { transform: translateX(-3px); }
+    .proj-subnav-link.next:hover svg { transform: translateX(3px); }
+
+    /* ═══ HERO ═══ */
+    .proj-hero { min-height: 78vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 108px 48px 96px; position: relative; border-bottom: 1px solid var(--line); } 
+    .hero-bg-num { position: absolute; right: 48px; bottom: 40px; font-family: var(--serif); font-size: 30vw; line-height: 1; color: rgba(45,212,160,0.025); letter-spacing: -.05em; pointer-events: none; user-select: none; }
+    .proj-hero-breadcrumb { font-family: var(--mono); font-size: 11px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 36px; animation: fadeUp .8s var(--ease) both; }
+    .proj-hero-breadcrumb a { color: var(--txt-dim); text-decoration: none; transition: color .2s; }
+    .proj-hero-breadcrumb a:hover { color: var(--em); }
+    .proj-hero-breadcrumb span { color: var(--em); }
+    .proj-hero-title { font-family: var(--serif); font-size: clamp(48px, 7.5vw, 100px); line-height: 1.3; letter-spacing: -.03em; color: var(--txt); margin-bottom: 36px; animation: fadeUp .8s .08s var(--ease) both; }
+    .proj-hero-title em { font-style: italic; display: block; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; padding-right: 6px; }
+    .proj-hero-meta { display: flex; align-items: stretch; gap: 0; border-top: 1px solid var(--line); padding-top: 28px; animation: fadeUp .8s .18s var(--ease) both; }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; padding-right: 40px; margin-right: 40px; border-right: 1px solid var(--line); }
+    .meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .meta-key { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .14em; text-transform: uppercase; }
+    .meta-val { font-size: 14px; color: var(--txt); font-weight: 500; }
+    .meta-val-em { color: var(--em); font-family: var(--mono); font-size: 13px; }
+    .proj-hero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; align-items: flex-end; }
+    .ptag { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--em-line); border-radius: 20px; color: var(--em-dim); background: var(--em-bg); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+    /* ═══ CONTEXTE VISUEL — remplacement VBA Outlook ═══ */
+    .problem-section {
+      border-bottom: 1px solid var(--line);
+      padding: 80px 48px;
+    }
+    .section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .section-h2 { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 8px; }
+    .section-intro { font-size: 15px; color: var(--txt-mid); line-height: 1.8; max-width: 680px; margin-bottom: 44px; }
+
+    .before-after {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+    .ba-card {
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .ba-card.before { border-color: rgba(248,113,113,0.20); opacity: .75; }
+    .ba-card.after  { border-color: var(--em-line); }
+
+    .ba-head {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ba-card.before .ba-head { background: rgba(248,113,113,0.04); border-bottom-color: rgba(248,113,113,0.15); }
+    .ba-card.after  .ba-head { background: var(--em-bg); border-bottom-color: var(--em-line); }
+
+    .ba-badge {
+      font-family: var(--mono); font-size: 8px; letter-spacing: .10em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 20px;
+    }
+    .ba-card.before .ba-badge { background: rgba(248,113,113,0.08); color: #f87171; border: 1px solid rgba(248,113,113,0.20); }
+    .ba-card.after  .ba-badge { background: var(--em-bg); color: var(--em); border: 1px solid var(--em-line); }
+    .ba-title { font-size: 14px; font-weight: 500; }
+    .ba-card.before .ba-title { color: #f87171; }
+    .ba-card.after  .ba-title { color: var(--em); }
+
+    .ba-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .ba-row { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--txt-mid); line-height: 1.5; }
+    .ba-row-icon { flex-shrink: 0; margin-top: 2px; }
+    .ba-card.before .ba-row-icon { color: #f87171; }
+    .ba-card.after  .ba-row-icon { color: var(--em); }
+
+    .ba-arrow {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      flex-shrink: 0;
+    }
+    .ba-arrow-line { width: 1px; height: 40px; background: var(--em-line); }
+    .ba-arrow-head { color: var(--em); }
+
+    /* ═══ PIPELINE ═══ */
+    .pipeline-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+
+    /* Pipeline horizontal à 4 couches */
+    .pipeline-layers { display: flex; flex-direction: column; gap: 0; margin-top: 44px; }
+
+    .pipeline-row {
+      display: flex; align-items: stretch; gap: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .pipeline-row:last-child { border-bottom: none; }
+
+    .pl-label-col {
+      width: 140px; flex-shrink: 0;
+      padding: 20px 20px 20px 0;
+      display: flex; align-items: center;
+      border-right: 1px solid var(--line);
+    }
+    .pl-label {
+      font-family: var(--mono); font-size: 8px; color: var(--txt-dim);
+      letter-spacing: .12em; text-transform: uppercase; line-height: 1.5;
+    }
+
+    .pl-steps {
+      flex: 1; padding: 20px 0 20px 24px;
+      display: flex; align-items: center; gap: 0;
+    }
+
+    .pl-step {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; position: relative; flex: 1;
+    }
+    .pl-step:not(:last-child)::after {
+      content: '';
+      position: absolute; top: 22px; right: -1px; width: 50%; height: 1px;
+      background: linear-gradient(90deg, var(--line2), transparent);
+    }
+    .pl-step:not(:first-child)::before {
+      content: '';
+      position: absolute; top: 22px; left: -1px; width: 50%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line2));
+    }
+
+    .pl-node {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--line);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1; flex-shrink: 0;
+      transition: border-color .2s;
+    }
+    .pl-node svg { color: var(--txt-dim); }
+    .pl-node.xl   { border-color: var(--xl-line); }
+    .pl-node.xl svg   { color: var(--xl); }
+    .pl-node.vba  { border-color: var(--vba-line); }
+    .pl-node.vba svg  { color: var(--vba); }
+    .pl-node.sp   { border-color: var(--sp-line); }
+    .pl-node.sp svg   { color: var(--sp); }
+    .pl-node.em   { border-color: var(--em-line); box-shadow: 0 0 0 4px rgba(45,212,160,0.07); }
+    .pl-node.em svg   { color: var(--em); }
+
+    .pl-step-label {
+      font-size: 11px; color: var(--txt-dim); margin-top: 8px;
+      line-height: 1.3; max-width: 90px;
+    }
+    .pl-step.active .pl-step-label { color: var(--txt); }
+
+    /* ═══ SNIPPET VBA ═══ */
+    .code-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+
+    .code-block {
+      margin-top: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--vba-line);
+      background: #0a1210;
+      overflow: hidden;
+    }
+    .code-bar {
+      padding: 12px 18px;
+      background: var(--bg2); border-bottom: 1px solid var(--vba-line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .code-bar-title {
+      font-family: var(--mono); font-size: 9px; color: var(--vba);
+      letter-spacing: .12em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .code-bar-lang {
+      font-family: var(--mono); font-size: 8px; color: var(--txt-dim);
+      letter-spacing: .08em; padding: 2px 8px; border-radius: 4px;
+      background: rgba(167,139,250,0.08); border: 1px solid var(--vba-line);
+    }
+    .code-body {
+      padding: 22px 24px;
+      font-family: var(--mono); font-size: 12px; line-height: 1.85;
+      overflow-x: auto;
+    }
+
+    /* Coloration syntaxique */
+    .c-kw   { color: var(--vba); }         /* keyword */
+    .c-fn   { color: var(--em); }          /* function/sub */
+    .c-var  { color: var(--sp); }          /* variable */
+    .c-str  { color: #fbbf24; }            /* string */
+    .c-cmt  { color: var(--txt-dim); font-style: italic; } /* comment */
+    .c-num  { color: #f87171; }            /* number/value */
+    .c-obj  { color: var(--xl); }          /* object */
+
+    /* ═══ CONTENU PRINCIPAL ═══ */
+    .proj-content { display: grid; grid-template-columns: 1fr 320px; gap: 0; border-bottom: 1px solid var(--line); }
+    .proj-main { padding: 96px 80px 96px 48px; border-right: 1px solid var(--line); }
+    .proj-section { margin-bottom: 72px; }
+    .proj-section:last-child { margin-bottom: 0; }
+    .proj-section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .proj-section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .proj-section-title { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 24px; }
+    .proj-section-body { font-size: 15px; color: var(--txt-mid); line-height: 1.85; }
+    .proj-section-body p + p { margin-top: 16px; }
+    .proj-section-body strong { color: var(--txt); font-weight: 500; }
+
+    .proj-timeline { list-style: none; margin-top: 24px; }
+    .ptl-item { display: grid; grid-template-columns: 28px 1fr; gap: 16px; padding-bottom: 36px; position: relative; }
+    .ptl-item:last-child { padding-bottom: 0; }
+    .ptl-item::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 1px; background: linear-gradient(180deg, var(--em-dim), transparent); }
+    .ptl-item:last-child::before { display: none; }
+    .ptl-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--em); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 0 4px rgba(45,212,160,0.08); }
+    .ptl-dot svg { width: 12px; height: 12px; color: var(--em); }
+    .ptl-dot.xl-dot  { border-color: var(--xl);  box-shadow: 0 0 0 4px rgba(34,197,94,0.08); }
+    .ptl-dot.xl-dot svg  { color: var(--xl); }
+    .ptl-dot.vba-dot { border-color: var(--vba); box-shadow: 0 0 0 4px rgba(167,139,250,0.08); }
+    .ptl-dot.vba-dot svg { color: var(--vba); }
+    .ptl-dot.sp-dot  { border-color: var(--sp);  box-shadow: 0 0 0 4px rgba(125,211,252,0.08); }
+    .ptl-dot.sp-dot svg  { color: var(--sp); }
+    .ptl-step { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+    .ptl-step.xl-step  { color: var(--xl); }
+    .ptl-step.vba-step { color: var(--vba); }
+    .ptl-step.sp-step  { color: var(--sp); }
+    .ptl-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 6px; }
+    .ptl-desc  { font-size: 14px; color: var(--txt-mid); line-height: 1.7; }
+
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .feat-item { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); transition: background .25s; }
+    .feat-item:last-child { border-bottom: none; }
+    .feat-item:hover { background: var(--bg2); }
+    .feat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--em); flex-shrink: 0; margin-top: 7px; }
+    .feat-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .feat-desc  { font-size: 13px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* ─── Sidebar ─── */
+    .proj-sidebar { padding: 96px 48px; display: flex; flex-direction: column; gap: 48px; }
+    .sidebar-label { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line2), transparent); }
+    .stack-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .stack-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; transition: border-color .2s; }
+    .stack-item:hover { border-color: var(--em-line); }
+    .stack-item.xl-item  { border-color: var(--xl-line); }
+    .stack-item.vba-item { border-color: var(--vba-line); }
+    .stack-item.sp-item  { border-color: var(--sp-line); }
+    .stack-name { font-size: 13px; color: var(--txt); font-weight: 500; }
+    .stack-role { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 16px; position: relative; overflow: hidden; }
+    .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--em), transparent); }
+    .metric-num { font-family: var(--serif); font-size: 32px; line-height: 1; letter-spacing: -.02em; color: var(--txt); }
+    .metric-num em { font-style: normal; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .metric-label { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; }
+    .proj-status { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: rgba(45,212,160,0.06); border: 1px solid rgba(45,212,160,0.2); border-radius: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--em); flex-shrink: 0; animation: pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(45,212,160,.5); } 70% { box-shadow: 0 0 0 6px rgba(45,212,160,0); } 100% { box-shadow: 0 0 0 0 rgba(45,212,160,0); } }
+    .status-text { font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .06em; }
+
+    footer { padding: 22px 48px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .footer-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em; }
+    .footer-back { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); text-decoration: none; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+    .footer-back:hover { color: var(--em); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .1s; }
+
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .proj-hero { padding-left: 20px; padding-right: 20px; }
+      .proj-hero-meta { flex-wrap: wrap; gap: 20px; }
+      .meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+      .proj-hero-tags { margin-left: 0; margin-top: 16px; }
+      .problem-section, .pipeline-section, .code-section { padding: 48px 20px; }
+      .before-after { grid-template-columns: 1fr; }
+      .ba-arrow { flex-direction: row; }
+      .ba-arrow-line { width: 40px; height: 1px; }
+      .pl-label-col { width: 80px; }
+      .proj-content { grid-template-columns: 1fr; }
+      .proj-main { padding: 60px 20px; border-right: none; }
+      .proj-sidebar { padding: 0 20px 60px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="projects.html">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <div class="proj-subnav">
+    <a href="project07.html" class="proj-subnav-link prev">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M6 2L1 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Projet précédent — Gestion des stocks informatique
+    </a>
+    <a href="projects.html" class="proj-subnav-link next">
+      Retour aux projets
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <!-- ══ HERO ══ -->
+  <div class="proj-hero">
+    
+    
+
+    <div class="proj-hero-breadcrumb">
+      <a href="index.html">Accueil</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <a href="index.html">Projets</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Automatisation d'envoi e-mail</span>
+    </div>
+
+    <h1 class="proj-hero-title">
+      Automatisation<br><em>d'envoi e-mail</em>
+    </h1>
+
+    <div class="proj-hero-meta">
+      <div class="meta-item">
+        <span class="meta-key">Contexte</span>
+        <span class="meta-val">INEO Atlantique Services</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Période</span>
+        <span class="meta-val">2025 → En production</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Rôle</span>
+        <span class="meta-val">Développeur seul</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Statut</span>
+        <span class="meta-val meta-val-em">● Déployé</span>
+      </div>
+      <div class="proj-hero-tags">
+        <span class="ptag">VBA Excel</span>
+        <span class="ptag">SharePoint</span>
+        <span class="ptag">Power Automate</span>
+        <span class="ptag">Outlook</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ AVANT / APRÈS ══ -->
+  <section class="problem-section reveal">
+    <div class="section-tag">Problématique</div>
+    <h2 class="section-h2">Pallier la disparition du VBA dans Outlook</h2>
+    <p class="section-intro">
+      Microsoft a progressivement supprimé la possibilité d'exécuter des macros VBA directement depuis Outlook.
+      Le processus d'envoi d'e-mails automatisés aux clients devait donc être repensé
+      en s'appuyant sur des outils encore disponibles dans l'écosystème Microsoft 365.
+    </p>
+
+    <div class="before-after">
+
+      <!-- Avant -->
+      <div class="ba-card before">
+        <div class="ba-head">
+          <span class="ba-badge">Avant</span>
+          <span class="ba-title">VBA Outlook</span>
+        </div>
+        <div class="ba-body">
+          <div class="ba-row">
+            <div class="ba-row-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            Macro VBA exécutée directement dans Outlook
+          </div>
+          <div class="ba-row">
+            <div class="ba-row-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            Fonctionnalité supprimée par Microsoft dans les nouvelles versions
+          </div>
+          <div class="ba-row">
+            <div class="ba-row-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            Envoi manuel requis — perte de temps et risque d'erreur de destinataire
+          </div>
+        </div>
+      </div>
+
+      <!-- Flèche -->
+      <div class="ba-arrow">
+        <div class="ba-arrow-line"></div>
+        <div class="ba-arrow-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="ba-arrow-line"></div>
+      </div>
+
+      <!-- Après -->
+      <div class="ba-card after">
+        <div class="ba-head">
+          <span class="ba-badge">Après</span>
+          <span class="ba-title">VBA Excel + Power Automate</span>
+        </div>
+        <div class="ba-body">
+          <div class="ba-row">
+            <div class="ba-row-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Macro VBA déplacée dans le fichier Excel source — toujours disponible
+          </div>
+          <div class="ba-row">
+            <div class="ba-row-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Un clic sur le bouton extrait les données et les envoie dans SharePoint
+          </div>
+          <div class="ba-row">
+            <div class="ba-row-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Power Automate prend le relais et envoie l'e-mail au bon destinataire
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ PIPELINE ══ -->
+  <section class="pipeline-section reveal">
+    <div class="section-tag">Architecture</div>
+    <h2 class="section-h2">Le flux de bout en bout</h2>
+    <p class="section-intro" style="margin-bottom:0;">
+      Quatre couches technologiques travaillent en séquence — chacune dans son domaine de compétence,
+      sans qu'aucun des intervenants n'ait à sortir de son outil habituel.
+    </p>
+
+    <div class="pipeline-layers">
+
+      <!-- Ligne 1 : Excel -->
+      <div class="pipeline-row">
+        <div class="pl-label-col">
+          <div class="pl-label" style="color:var(--xl);">Excel<br>Source</div>
+        </div>
+        <div class="pl-steps">
+          <div class="pl-step active">
+            <div class="pl-node xl">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div class="pl-step-label" style="color:var(--xl);">Fichier Excel<br>avec données client</div>
+          </div>
+          <div class="pl-step">
+            <div class="pl-node xl">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><circle cx="18.5" cy="18.5" r="2.5"/><path d="M5.5 5.5L18.5 18.5M18.5 5.5L13 11"/></svg>
+            </div>
+            <div class="pl-step-label" style="color:var(--xl);">Bouton assigné<br>à la macro</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ligne 2 : VBA -->
+      <div class="pipeline-row">
+        <div class="pl-label-col">
+          <div class="pl-label" style="color:var(--vba);">Macro<br>VBA</div>
+        </div>
+        <div class="pl-steps">
+          <div class="pl-step">
+            <div class="pl-node" style="opacity:.2;"></div>
+            <div class="pl-step-label"> </div>
+          </div>
+          <div class="pl-step active">
+            <div class="pl-node vba">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="pl-step-label" style="color:var(--vba);">Exécution<br>de la macro</div>
+          </div>
+          <div class="pl-step active">
+            <div class="pl-node vba">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="pl-step-label" style="color:var(--vba);">Extraction<br>des données</div>
+          </div>
+          <div class="pl-step">
+            <div class="pl-node" style="opacity:.2;"></div>
+            <div class="pl-step-label"> </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ligne 3 : SharePoint -->
+      <div class="pipeline-row">
+        <div class="pl-label-col">
+          <div class="pl-label" style="color:var(--sp);">Share­Point<br>Liste</div>
+        </div>
+        <div class="pl-steps">
+          <div class="pl-step">
+            <div class="pl-node" style="opacity:.2;"></div>
+            <div class="pl-step-label"> </div>
+          </div>
+          <div class="pl-step">
+            <div class="pl-node" style="opacity:.2;"></div>
+            <div class="pl-step-label"> </div>
+          </div>
+          <div class="pl-step active">
+            <div class="pl-node sp">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+            </div>
+            <div class="pl-step-label" style="color:var(--sp);">Écriture<br>dans la liste</div>
+          </div>
+          <div class="pl-step active">
+            <div class="pl-node sp">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            </div>
+            <div class="pl-step-label" style="color:var(--sp);">Déclenchement<br>du flux</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ligne 4 : Power Automate + Outlook -->
+      <div class="pipeline-row">
+        <div class="pl-label-col">
+          <div class="pl-label" style="color:var(--em);">Power<br>Automate</div>
+        </div>
+        <div class="pl-steps">
+          <div class="pl-step">
+            <div class="pl-node" style="opacity:.2;"></div>
+            <div class="pl-step-label"> </div>
+          </div>
+          <div class="pl-step">
+            <div class="pl-node" style="opacity:.2;"></div>
+            <div class="pl-step-label"> </div>
+          </div>
+          <div class="pl-step">
+            <div class="pl-node" style="opacity:.2;"></div>
+            <div class="pl-step-label"> </div>
+          </div>
+          <div class="pl-step active">
+            <div class="pl-node em">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div class="pl-step-label" style="color:var(--em);">Envoi e-mail<br>bon destinataire</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ SNIPPET VBA ══
+  <section class="code-section reveal">
+    <div class="section-tag">Technique</div>
+    <h2 class="section-h2">La macro VBA au cœur du dispositif</h2>
+    <p class="section-intro" style="margin-bottom:0;">
+      La macro VBA est assignée à un bouton dans le fichier Excel.
+      Au clic, elle lit les cellules pertinentes, constitue une entrée structurée
+      et l'écrit dans la liste SharePoint via une requête HTTP — tout sans quitter Excel.
+    </p>
+
+    <div class="code-block">
+      <div class="code-bar">
+        <div class="code-bar-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Macro VBA — Envoi vers SharePoint
+        </div>
+        <span class="code-bar-lang">VBA</span>
+      </div>
+      <div class="code-body"><pre><span class="c-cmt">' Macro assignée au bouton "Envoyer au client"</span>
+<span class="c-kw">Sub</span> <span class="c-fn">EnvoyerVersSharePoint</span>()
+
+    <span class="c-cmt">' ── Lecture des données dans la feuille Excel ──</span>
+    <span class="c-kw">Dim</span> <span class="c-var">ws</span>         <span class="c-kw">As</span> <span class="c-obj">Worksheet</span>
+    <span class="c-kw">Dim</span> <span class="c-var">client</span>     <span class="c-kw">As</span> <span class="c-kw">String</span>
+    <span class="c-kw">Dim</span> <span class="c-var">email</span>      <span class="c-kw">As</span> <span class="c-kw">String</span>
+    <span class="c-kw">Dim</span> <span class="c-var">interlocut</span> <span class="c-kw">As</span> <span class="c-kw">String</span>
+    <span class="c-kw">Dim</span> <span class="c-var">contenu</span>    <span class="c-kw">As</span> <span class="c-kw">String</span>
+
+    <span class="c-kw">Set</span> <span class="c-var">ws</span> = <span class="c-obj">ThisWorkbook</span>.Sheets(<span class="c-str">"Données"</span>)
+
+    <span class="c-var">client</span>     = <span class="c-var">ws</span>.Range(<span class="c-str">"B2"</span>).Value
+    <span class="c-var">email</span>      = <span class="c-var">ws</span>.Range(<span class="c-str">"B3"</span>).Value
+    <span class="c-var">interlocut</span> = <span class="c-var">ws</span>.Range(<span class="c-str">"B4"</span>).Value
+    <span class="c-var">contenu</span>    = <span class="c-var">ws</span>.Range(<span class="c-str">"B5"</span>).Value
+
+    <span class="c-cmt">' ── Construction du payload JSON ──</span>
+    <span class="c-kw">Dim</span> <span class="c-var">payload</span> <span class="c-kw">As</span> <span class="c-kw">String</span>
+    <span class="c-var">payload</span> = <span class="c-str">"{""client"":"""</span> &amp; <span class="c-var">client</span> &amp; <span class="c-str">""","</span> _
+            &amp; <span class="c-str">"""email"":"""</span>      &amp; <span class="c-var">email</span>      &amp; <span class="c-str">""","</span> _
+            &amp; <span class="c-str">"""interlocuteur"":"""</span> &amp; <span class="c-var">interlocut</span> &amp; <span class="c-str">""","</span> _
+            &amp; <span class="c-str">"""contenu"":"""</span>   &amp; <span class="c-var">contenu</span>   &amp; <span class="c-str">"""}"</span>
+
+    <span class="c-cmt">' ── Envoi vers la liste SharePoint via requête HTTP ──</span>
+    <span class="c-kw">Dim</span> <span class="c-var">http</span> <span class="c-kw">As</span> <span class="c-obj">Object</span>
+    <span class="c-kw">Set</span> <span class="c-var">http</span> = <span class="c-obj">CreateObject</span>(<span class="c-str">"MSXML2.XMLHTTP"</span>)
+
+    <span class="c-var">http</span>.Open <span class="c-str">"POST"</span>, <span class="c-str">"[URL_LISTE_SHAREPOINT]"</span>, <span class="c-num">False</span>
+    <span class="c-var">http</span>.setRequestHeader <span class="c-str">"Content-Type"</span>, <span class="c-str">"application/json"</span>
+    <span class="c-var">http</span>.Send <span class="c-var">payload</span>
+
+    <span class="c-kw">If</span> <span class="c-var">http</span>.Status = <span class="c-num">201</span> <span class="c-kw">Then</span>
+        <span class="c-obj">MsgBox</span> <span class="c-str">"Données envoyées — e-mail en cours d'envoi."</span>, _
+               vbInformation, <span class="c-str">"Succès"</span>
+    <span class="c-kw">Else</span>
+        <span class="c-obj">MsgBox</span> <span class="c-str">"Erreur : "</span> &amp; <span class="c-var">http</span>.Status, vbCritical, <span class="c-str">"Échec"</span>
+    <span class="c-kw">End If</span>
+
+<span class="c-kw">End Sub</span></pre></div>
+    </div>
+  </section> -->
+
+  <!-- ══ CONTENU + SIDEBAR ══ -->
+  <div class="proj-content">
+    <div class="proj-main">
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Contexte</div>
+        <h2 class="proj-section-title">Quand l'outil disparaît, l'automatisation survit</h2>
+        <div class="proj-section-body">
+          <p>
+            Le processus d'envoi d'e-mails clients reposait sur des macros VBA
+            intégrées directement dans Outlook — une pratique répandue,
+            que Microsoft a progressivement rendue impossible dans les nouvelles versions
+            pour des raisons de sécurité.
+          </p>
+          <p>
+            Plutôt que de revenir à un envoi entièrement manuel,
+            la solution a consisté à <strong>déplacer la logique là où le VBA fonctionne encore</strong> :
+            dans Excel. La macro lit les données de la feuille, les envoie dans une liste SharePoint,
+            et Power Automate prend le relais pour cibler le bon client et le bon interlocuteur
+            sans aucune intervention supplémentaire.
+          </p>
+        </div>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnement</div>
+        <h2 class="proj-section-title">De la cellule Excel à l'e-mail client</h2>
+        <ol class="proj-timeline">
+
+          <li class="ptl-item">
+            <div class="ptl-dot xl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step xl-step">Étape 01 — Excel</div>
+              <div class="ptl-title">Le fichier source contient toutes les données</div>
+              <div class="ptl-desc">Le fichier Excel métier est le point de départ — il contient les informations client, les coordonnées du bon interlocuteur, et le contenu du message à envoyer, répartis dans des cellules structurées.</div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot vba-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step vba-step">Étape 02 — Macro VBA</div>
+              <div class="ptl-title">Un clic sur le bouton déclenche la macro</div>
+              <div class="ptl-desc">
+                Un bouton est intégré directement dans la feuille Excel et assigné à la macro VBA.
+                Au clic, la macro lit les cellules concernées — client, e-mail, interlocuteur, contenu —,
+                constitue un payload JSON et l'envoie vers la liste SharePoint via une requête HTTP POST.
+                Une boîte de dialogue confirme le succès de l'opération.
+              </div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot sp-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step sp-step">Étape 03 — SharePoint</div>
+              <div class="ptl-title">La liste reçoit les données et déclenche le flux</div>
+              <div class="ptl-desc">
+                La liste SharePoint enregistre l'entrée avec toutes les données nécessaires.
+                L'ajout d'un nouvel élément dans la liste sert de <strong style="color:var(--txt)">déclencheur natif</strong>
+                pour le flux Power Automate — aucun polling, aucun timer.
+              </div>
+            </div>
+          </li>
+
+          <li class="ptl-item">
+            <div class="ptl-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div>
+              <div class="ptl-step">Étape 04 — Power Automate</div>
+              <div class="ptl-title">Envoi ciblé au bon client et au bon interlocuteur</div>
+              <div class="ptl-desc">Le flux récupère les données de la liste et envoie l'e-mail via Outlook au destinataire exact — client et interlocuteur identifiés à partir des informations extraites du fichier Excel. Aucune intervention manuelle n'est requise après le clic initial.</div>
+            </div>
+          </li>
+
+        </ol>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnalités</div>
+        <h2 class="proj-section-title">Ce que la solution apporte</h2>
+        <ul class="feat-list">
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--vba)"></div>
+            <div>
+              <div class="feat-title">Macro VBA dans Excel — disponible et stable</div>
+              <div class="feat-desc">En déplaçant la logique d'Outlook vers Excel, la macro VBA reste pleinement fonctionnelle dans les versions actuelles de Microsoft 365 — sans dépendance à une fonctionnalité dépréciée.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--xl)"></div>
+            <div>
+              <div class="feat-title">Déclenchement au clic — zéro friction</div>
+              <div class="feat-desc">Un seul bouton dans le fichier Excel suffit à lancer l'intégralité du processus — lecture des données, envoi dans SharePoint, déclenchement du flux et envoi de l'e-mail client.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--sp)"></div>
+            <div>
+              <div class="feat-title">SharePoint comme pont entre Excel et Power Automate</div>
+              <div class="feat-desc">La liste SharePoint joue le rôle de couche d'intégration : elle reçoit les données du VBA et déclenche nativement le flux Power Automate dès l'ajout d'une nouvelle entrée, sans configuration complexe.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Envoi ciblé — bon client, bon interlocuteur</div>
+              <div class="feat-desc">Power Automate utilise les données extraites du fichier pour adresser l'e-mail précisément au destinataire voulu — sans risque d'erreur de destinataire lié à une saisie manuelle.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Architecture découplée et maintenable</div>
+              <div class="feat-desc">Chaque couche (VBA, SharePoint, Power Automate) est indépendante — on peut faire évoluer le template e-mail dans Power Automate sans toucher à la macro, et vice versa.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <aside class="proj-sidebar">
+
+      <div class="sidebar-block reveal">
+        <div class="sidebar-label">Statut</div>
+        <div class="proj-status">
+          <div class="status-dot"></div>
+          <span class="status-text">En production — INEO Atlantique</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Chiffres clés</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-num">1</div>
+            <div class="metric-label">Clic utilisateur</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">4</div>
+            <div class="metric-label">Couches tech.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">0</div>
+            <div class="metric-label">Action manuelle</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num"><em>∞</em></div>
+            <div class="metric-label">Clients adressables</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Stack technique</div>
+        <ul class="stack-list">
+          <li class="stack-item xl-item">
+            <span class="stack-name">Excel</span>
+            <span class="stack-role">Source de données</span>
+          </li>
+          <li class="stack-item vba-item">
+            <span class="stack-name">VBA</span>
+            <span class="stack-role">Macro extraction</span>
+          </li>
+          <li class="stack-item sp-item">
+            <span class="stack-name">SharePoint Lists</span>
+            <span class="stack-role">Pont & déclencheur</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Power Automate</span>
+            <span class="stack-role">Flux d'envoi</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Outlook</span>
+            <span class="stack-role">Envoi e-mail</span>
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </div>
+
+  </main>
+
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const N = 150, D = 150, R = 130;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function init() {
+        particles = [];
+        for (let i = 0; i < N; i++)
+          particles.push({ x: Math.random()*W, y: Math.random()*H, vx: rand(-0.22,0.22), vy: rand(-0.18,0.18), r: rand(1.5,2.8), o: rand(0.55,0.95) });
+      }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        for (let i=0;i<particles.length;i++) for (let j=i+1;j<particles.length;j++) {
+          const a=particles[i],b=particles[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+          if(d<D){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(${EM},${(1-d/D)*0.22})`;ctx.lineWidth=0.8;ctx.stroke();}
+        }
+        particles.forEach(p => {
+          const mdx=mouse.x-p.x,mdy=mouse.y-p.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
+          if(md<R){const f=(1-md/R)*0.012;p.vx+=mdx*f;p.vy+=mdy*f;}
+          const s=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+          if(s<0.12){p.vx+=(Math.random()-.5)*.08;p.vy+=(Math.random()-.5)*.08;}
+          if(s>0.8){p.vx=p.vx/s*.8;p.vy=p.vy/s*.8;}
+          p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0){p.x=0;p.vx*=-1;}if(p.x>W){p.x=W;p.vx*=-1;}
+          if(p.y<0){p.y=0;p.vy*=-1;}if(p.y>H){p.y=H;p.vy*=-1;}
+          const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+          g.addColorStop(0,`rgba(${EM},${p.o*0.35})`);g.addColorStop(1,`rgba(${EM},0)`);
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r*4,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${EM},${p.o})`;ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+      resize(); init(); requestAnimationFrame(draw);
+    })();
+
+    const cursor = document.getElementById('cursor'), ring = document.getElementById('cursor-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+    (function tick(){ cursor.style.left=mx+'px'; cursor.style.top=my+'px'; rx+=(mx-rx)*0.13; ry+=(my-ry)*0.13; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(tick); })();
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if(!e.isIntersecting) return; e.target.classList.add('visible'); obs.unobserve(e.target); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  </script>
+
+</body>
+</html>

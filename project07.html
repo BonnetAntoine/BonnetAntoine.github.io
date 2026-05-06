@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion des stocks informatique — Antoine Bonnet</title>
+  <meta name="description" content="Application Power Apps de gestion des stocks de matériel informatique — entrées, sorties, mises à jour, alertes de stock faible et suivi multi-agences." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --line2:   rgba(45,212,160,0.16);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+
+      --ok:      #4ade80;
+      --ok-bg:   rgba(74,222,128,0.06);
+      --ok-line: rgba(74,222,128,0.20);
+      --warn:    #fbbf24;
+      --warn-bg: rgba(251,191,36,0.06);
+      --warn-line: rgba(251,191,36,0.22);
+      --low:     #f87171;
+      --low-bg:  rgba(248,113,113,0.06);
+      --low-line: rgba(248,113,113,0.20);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--txt); font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; cursor: none; }
+
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    #cursor { position: fixed; width: 8px; height: 8px; background: var(--em); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width .25s var(--ease), height .25s var(--ease); }
+    #cursor-ring { position: fixed; width: 32px; height: 32px; border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: width .3s var(--ease), height .3s var(--ease), opacity .2s; }
+    body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.88); backdrop-filter: blur(16px); }
+    .nav-logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--em); letter-spacing: .04em; text-decoration: none; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--txt-dim); text-decoration: none; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover { color: var(--txt); }
+    .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--em); text-decoration: none; text-transform: uppercase; border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px; background: var(--em-bg); transition: background .2s, border-color .2s; }
+    .nav-cta:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    .proj-subnav { position: fixed; top: 64px; left: 0; right: 0; z-index: 99; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 44px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.80); backdrop-filter: blur(12px); }
+    .proj-subnav-link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-dim); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color .2s; }
+    .proj-subnav-link:hover { color: var(--em); }
+    .proj-subnav-link svg { transition: transform .2s; }
+    .proj-subnav-link.prev:hover svg { transform: translateX(-3px); }
+    .proj-subnav-link.next:hover svg { transform: translateX(3px); }
+
+    /* ═══ HERO ═══ */
+    .proj-hero { min-height: 78vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 108px 48px 96px; position: relative; border-bottom: 1px solid var(--line); } 
+    .hero-bg-num { position: absolute; right: 48px; bottom: 40px; font-family: var(--serif); font-size: 30vw; line-height: 1; color: rgba(45,212,160,0.025); letter-spacing: -.05em; pointer-events: none; user-select: none; }
+    .proj-hero-breadcrumb { font-family: var(--mono); font-size: 11px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 36px; animation: fadeUp .8s var(--ease) both; }
+    .proj-hero-breadcrumb a { color: var(--txt-dim); text-decoration: none; transition: color .2s; }
+    .proj-hero-breadcrumb a:hover { color: var(--em); }
+    .proj-hero-breadcrumb span { color: var(--em); }
+    .proj-hero-title { font-family: var(--serif); font-size: clamp(48px, 7.5vw, 100px); line-height: 1.3; letter-spacing: -.03em; color: var(--txt); margin-bottom: 36px; animation: fadeUp .8s .08s var(--ease) both; }
+    .proj-hero-title em { font-style: italic; display: block; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; padding-right: 6px; }
+    .proj-hero-meta { display: flex; align-items: stretch; gap: 0; border-top: 1px solid var(--line); padding-top: 28px; animation: fadeUp .8s .18s var(--ease) both; }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; padding-right: 40px; margin-right: 40px; border-right: 1px solid var(--line); }
+    .meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .meta-key { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .14em; text-transform: uppercase; }
+    .meta-val { font-size: 14px; color: var(--txt); font-weight: 500; }
+    .meta-val-em { color: var(--em); font-family: var(--mono); font-size: 13px; }
+    .proj-hero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; align-items: flex-end; }
+    .ptag { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--em-line); border-radius: 20px; color: var(--em-dim); background: var(--em-bg); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+    /* ═══ 4 OPÉRATIONS CLÉS ═══ */
+    .ops-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+    .section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .section-h2 { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 8px; }
+    .section-intro { font-size: 15px; color: var(--txt-mid); line-height: 1.8; max-width: 680px; margin-bottom: 44px; }
+
+    .ops-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .op-card {
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: 22px 20px 24px;
+      position: relative; overflow: hidden;
+      transition: border-color .25s, transform .25s var(--ease);
+    }
+    .op-card:hover { border-color: var(--em-line); transform: translateY(-3px); }
+    .op-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--em), transparent); }
+
+    .op-num {
+      font-family: var(--mono); font-size: 9px; color: var(--txt-dim);
+      letter-spacing: .14em; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .op-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--em-bg); border: 1px solid var(--em-line);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .op-icon svg { color: var(--em); }
+    .op-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 8px; line-height: 1.3; }
+    .op-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.6; }
+
+    /* Carte alerte — accent warn */
+    .op-card.alert { border-color: var(--warn-line); }
+    .op-card.alert::before { background: linear-gradient(90deg, var(--warn), transparent); }
+    .op-card.alert:hover { border-color: var(--warn); }
+    .op-card.alert .op-icon { background: var(--warn-bg); border-color: var(--warn-line); }
+    .op-card.alert .op-icon svg { color: var(--warn); }
+    .op-card.alert .op-num { color: var(--warn); opacity: .6; }
+
+    /* ═══ DASHBOARD STOCK — APERÇU VISUEL ═══ */
+    .stock-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+
+    .stock-ui {
+      margin-top: 44px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    /* Barre de titre */
+    .stock-ui-bar {
+      padding: 14px 22px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .stock-ui-title {
+      font-family: var(--mono); font-size: 10px; color: var(--em);
+      letter-spacing: .12em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .stock-ui-filters {
+      display: flex; gap: 6px;
+    }
+    .stock-filter {
+      font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px; border: 1px solid var(--line);
+      color: var(--txt-dim); background: transparent; cursor: pointer;
+    }
+    .stock-filter.active { border-color: var(--em-line); color: var(--em); background: var(--em-bg); }
+
+    /* Tableau stock */
+    .stock-table { width: 100%; border-collapse: collapse; }
+    .stock-table th {
+      font-family: var(--mono); font-size: 8px; color: var(--txt-dim);
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: 10px 20px; border-bottom: 1px solid var(--line);
+      text-align: left; background: var(--bg2);
+    }
+    .stock-table td {
+      padding: 13px 20px; border-bottom: 1px solid rgba(45,212,160,0.05);
+      font-size: 13px; color: var(--txt-mid);
+      transition: background .2s;
+    }
+    .stock-table tr:last-child td { border-bottom: none; }
+    .stock-table tr:hover td { background: var(--bg2); }
+    .stock-table td.product { color: var(--txt); font-weight: 500; }
+    .stock-table td.agency {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .05em;
+    }
+
+    /* Jauge de stock */
+    .stock-gauge { display: flex; align-items: center; gap: 10px; }
+    .gauge-bar {
+      width: 80px; height: 5px; border-radius: 10px;
+      background: rgba(255,255,255,0.05); overflow: hidden; flex-shrink: 0;
+    }
+    .gauge-fill { height: 100%; border-radius: 10px; }
+    .gauge-fill.ok   { background: var(--ok); }
+    .gauge-fill.warn { background: var(--warn); }
+    .gauge-fill.low  { background: var(--low); }
+    .gauge-num { font-family: var(--mono); font-size: 11px; }
+    .gauge-num.ok   { color: var(--ok); }
+    .gauge-num.warn { color: var(--warn); }
+    .gauge-num.low  { color: var(--low); }
+
+    /* Badge statut */
+    .stock-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 20px;
+    }
+    .stock-badge.ok   { background: var(--ok-bg);   color: var(--ok);   border: 1px solid var(--ok-line); }
+    .stock-badge.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-line); }
+    .stock-badge.low  { background: var(--low-bg);  color: var(--low);  border: 1px solid var(--low-line); }
+    .stock-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .stock-badge.low::before { animation: lowPulse 1.8s ease-in-out infinite; }
+    @keyframes lowPulse {
+      0%  { box-shadow: 0 0 0 0   rgba(248,113,113,.6); }
+      70% { box-shadow: 0 0 0 4px rgba(248,113,113,0); }
+      100%{ box-shadow: 0 0 0 0   rgba(248,113,113,0); }
+    }
+
+    /* ═══ CARTE RÉSEAU AGENCES ═══ */
+    .agencies-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+
+    .agencies-layout {
+      margin-top: 44px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Hub Nantes */
+    .hub-card {
+      border-radius: 14px;
+      border: 1px solid var(--em-line);
+      background: var(--em-bg);
+      padding: 24px 26px;
+      position: relative;
+    }
+    .hub-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--em), var(--em-dim), transparent); border-radius: 14px 14px 0 0; }
+    .hub-label { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .hub-name { font-family: var(--serif); font-size: 26px; letter-spacing: -.02em; color: var(--txt); margin-bottom: 6px; }
+    .hub-sub { font-size: 13px; color: var(--txt-mid); line-height: 1.6; margin-bottom: 18px; }
+    .hub-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .hub-tag { font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--em-line); color: var(--em-dim); background: transparent; }
+
+    /* Grille agences */
+    .agencies-grid { display: flex; flex-direction: column; gap: 10px; }
+    .agency-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 18px;
+      border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+      transition: border-color .2s;
+    }
+    .agency-row:hover { border-color: var(--em-line); }
+    .agency-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--em-dim); flex-shrink: 0;
+    }
+    .agency-name { font-size: 14px; color: var(--txt); font-weight: 500; flex: 1; }
+    .agency-role { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .06em; text-transform: uppercase; }
+    .agency-arrow {
+      color: var(--em-dim); font-family: var(--mono); font-size: 10px;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    /* ═══ CONTENU PRINCIPAL ═══ */
+    .proj-content { display: grid; grid-template-columns: 1fr 320px; gap: 0; border-bottom: 1px solid var(--line); }
+    .proj-main { padding: 96px 80px 96px 48px; border-right: 1px solid var(--line); }
+    .proj-section { margin-bottom: 72px; }
+    .proj-section:last-child { margin-bottom: 0; }
+    .proj-section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .proj-section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .proj-section-title { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 24px; }
+    .proj-section-body { font-size: 15px; color: var(--txt-mid); line-height: 1.85; }
+    .proj-section-body p + p { margin-top: 16px; }
+    .proj-section-body strong { color: var(--txt); font-weight: 500; }
+
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .feat-item { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); transition: background .25s; }
+    .feat-item:last-child { border-bottom: none; }
+    .feat-item:hover { background: var(--bg2); }
+    .feat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--em); flex-shrink: 0; margin-top: 7px; }
+    .feat-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .feat-desc { font-size: 13px; color: var(--txt-mid); line-height: 1.55; }
+
+    /* Bloc "Pas de Power Automate" */
+    .no-automate {
+      margin-top: 28px;
+      padding: 20px 22px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--bg2);
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+    .no-automate-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--em-bg); border: 1px solid var(--em-line);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .no-automate-title { font-size: 13px; font-weight: 500; color: var(--txt); margin-bottom: 4px; }
+    .no-automate-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.6; }
+
+    /* ─── Sidebar ─── */
+    .proj-sidebar { padding: 96px 48px; display: flex; flex-direction: column; gap: 48px; }
+    .sidebar-label { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line2), transparent); }
+    .stack-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .stack-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; transition: border-color .2s; }
+    .stack-item:hover { border-color: var(--em-line); }
+    .stack-name { font-size: 13px; color: var(--txt); font-weight: 500; }
+    .stack-role { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 16px; position: relative; overflow: hidden; }
+    .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--em), transparent); }
+    .metric-num { font-family: var(--serif); font-size: 32px; line-height: 1; letter-spacing: -.02em; color: var(--txt); }
+    .metric-num em { font-style: normal; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .metric-label { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; }
+    .proj-status { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: rgba(45,212,160,0.06); border: 1px solid rgba(45,212,160,0.2); border-radius: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--em); flex-shrink: 0; animation: pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(45,212,160,.5); } 70% { box-shadow: 0 0 0 6px rgba(45,212,160,0); } 100% { box-shadow: 0 0 0 0 rgba(45,212,160,0); } }
+    .status-text { font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .06em; }
+
+    footer { padding: 22px 48px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .footer-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em; }
+    .footer-back { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); text-decoration: none; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+    .footer-back:hover { color: var(--em); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .1s; }
+
+
+    /* ═══ SLIDER CAPTURES ═══ */
+    .screens-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+    .screens-header { margin-bottom: 36px; }
+    .screens-slider-wrap { position: relative; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); overflow: hidden; }
+    .screens-track { display: flex; transition: transform .55s cubic-bezier(0.16,1,0.3,1); will-change: transform; }
+    .screen-slide { flex: 0 0 100%; display: flex; flex-direction: column; }
+    .screen-slide img { width: 100%; height: 617px; display: block; object-fit: contain; object-position: center; background: var(--bg2); border-bottom: 1px solid var(--line); }
+    .screen-caption { display: flex; align-items: flex-start; gap: 16px; padding: 16px 22px; background: var(--surface); }
+    .screen-num { font-family: var(--mono); font-size: 10px; color: var(--em); letter-spacing: .14em; flex-shrink: 0; margin-top: 2px; }
+    .screen-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .screen-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+    .screen-btn { position: absolute; top: 308px; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--em-line); background: rgba(8,15,12,0.82); backdrop-filter: blur(8px); color: var(--txt); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s, border-color .2s, color .2s; z-index: 2; }
+    .screen-btn:hover { background: var(--em-bg); border-color: var(--em); color: var(--em); }
+    .screen-prev { left: 14px; } .screen-next { right: 14px; }
+    .screen-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }
+    .screen-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--txt-dim); cursor: pointer; transition: background .2s, transform .2s; }
+    .screen-dot.active { background: var(--em); transform: scale(1.4); }
+    @media (max-width: 1100px) { .ops-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .proj-hero { padding-left: 20px; padding-right: 20px; }
+      .proj-hero-meta { flex-wrap: wrap; gap: 20px; }
+      .meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+      .proj-hero-tags { margin-left: 0; margin-top: 16px; }
+      .ops-section, .stock-section, .agencies-section { padding: 48px 20px; }
+      .ops-grid { grid-template-columns: 1fr 1fr; }
+      .agencies-layout { grid-template-columns: 1fr; }
+      .proj-content { grid-template-columns: 1fr; }
+      .proj-main { padding: 60px 20px; border-right: none; }
+      .proj-sidebar { padding: 0 20px 60px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+    @media (max-width: 600px) { .ops-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="projects.html">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <div class="proj-subnav">
+    <a href="project06.html" class="proj-subnav-link prev">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M6 2L1 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Projet précédent — Notes de modification horaire
+    </a>
+    <a href="project08.html" class="proj-subnav-link next">
+      Projet suivant — Automatisation d'envoi e-mail
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <!-- ══ HERO ══ -->
+  <div class="proj-hero">
+    
+    
+
+    <div class="proj-hero-breadcrumb">
+      <a href="index.html">Accueil</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <a href="index.html">Projets</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Gestion des stocks informatique</span>
+    </div>
+
+    <h1 class="proj-hero-title">
+      Gestion des stocks<br><em>informatique</em>
+    </h1>
+
+    <div class="proj-hero-meta">
+      <div class="meta-item">
+        <span class="meta-key">Contexte</span>
+        <span class="meta-val">INEO Atlantique Services</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Période</span>
+        <span class="meta-val">2025 → En production</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Rôle</span>
+        <span class="meta-val">Développeur seul</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-key">Statut</span>
+        <span class="meta-val meta-val-em">● Déployé</span>
+      </div>
+      <div class="proj-hero-tags">
+        <span class="ptag">Power Apps</span>
+        <span class="ptag">Lists Microsoft</span>
+        <span class="ptag">PowerFX</span>
+        <span class="ptag">Multi-agences</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDER CAPTURES ══ -->
+  <section class="screens-section reveal">
+    <div class="screens-header">
+      <div class="section-tag">Aperçu de l'application</div>
+      <h2 class="section-h2" style="margin-bottom:6px;">L'interface en images</h2>
+      <p style="font-size:14px;color:var(--txt-mid);">Captures réelles de l'application Power Apps — interface bureau uniquement.</p>
+    </div>
+
+    <div class="screens-slider-wrap">
+      <div class="screens-track" id="screensTrack">
+
+        <div class="screen-slide">
+          <img src="image/home_gest_mth.png" alt="Écran d'accueil — Gestion des stocks méthodes" />
+          <div class="screen-caption">
+            <span class="screen-num">01</span>
+            <div>
+              <div class="screen-title">Écran d'accueil</div>
+              <div class="screen-desc">Vue principale avec les 4 opérations (Produit en stock, Mise à jour, Entrée, Sortie) et le tableau de bord des alertes stock faible par agence — Nantes, Angers, Niort, Brest.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="image/add_gest_mth.png" alt="Entrée en stock — Gestion des stocks méthodes" />
+          <div class="screen-caption">
+            <span class="screen-num">02</span>
+            <div>
+              <div class="screen-title">Entrée en stock — Ajout d'un produit</div>
+              <div class="screen-desc">Formulaire de création d'un nouvel article : nom, agence, catégorie, quantité, compatibilité et quantité minimale d'alerte. Validation immédiate dans Lists Microsoft.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="image/maj_gest_mth.png" alt="Mise à jour d'un produit — Gestion des stocks méthodes" />
+          <div class="screen-caption">
+            <span class="screen-num">03</span>
+            <div>
+              <div class="screen-title">Mise à jour du stock</div>
+              <div class="screen-desc">Liste filtrée et recherche instantanée des produits. Sélection d'un article pour mettre à jour ses données : quantité, compatibilité, seuil d'alerte, date de dernière modification.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="image/del_gest_mth.png" alt="Sortie du stock — Gestion des stocks méthodes" />
+          <div class="screen-caption">
+            <span class="screen-num">04</span>
+            <div>
+              <div class="screen-title">Sortie de stock</div>
+              <div class="screen-desc">Retrait définitif d'un article du stock : sélection du produit, de l'agence et de la compatibilité, saisie de la quantité sortie. Le produit est tracé dans l'historique sans disparaître de la base.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="screen-btn screen-prev" id="screenPrev" aria-label="Précédent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="screen-btn screen-next" id="screenNext" aria-label="Suivant">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+    <div class="screen-dots" id="screenDots">
+      <div class="screen-dot active"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+    </div>
+  </section>
+
+  <!-- ══ 4 OPÉRATIONS ══ -->
+  <section class="ops-section reveal">
+    <div class="section-tag">Fonctionnement</div>
+    <h2 class="section-h2">Quatre opérations, un seul outil</h2>
+    <p class="section-intro">
+      L'application couvre l'intégralité du cycle de vie du matériel informatique —
+      de la réception en stock jusqu'à la sortie définitive d'un article,
+      avec une surveillance en temps réel des niveaux pour chaque produit et chaque agence.
+    </p>
+
+    <div class="ops-grid">
+
+      <div class="op-card">
+        <div class="op-num">Opération 01</div>
+        <div class="op-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </div>
+        <div class="op-title">Entrée en stock</div>
+        <div class="op-desc">Réception d'un nouveau matériel depuis Nantes — saisie du produit, de la quantité, de l'agence de destination et horodatage automatique de l'entrée.</div>
+      </div>
+
+      <div class="op-card">
+        <div class="op-num">Opération 02</div>
+        <div class="op-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+        <div class="op-title">Mise à jour du stock</div>
+        <div class="op-desc">Modification d'une quantité ou d'une information produit existant — correction d'inventaire, réaffectation entre agences, changement de référence.</div>
+      </div>
+
+      <div class="op-card">
+        <div class="op-num">Opération 03</div>
+        <div class="op-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </div>
+        <div class="op-title">Sortie de stock</div>
+        <div class="op-desc">Retrait définitif d'un article dont on ne dispose plus — mise hors stock avec traçabilité complète de la date et du motif de sortie dans la liste.</div>
+      </div>
+
+      <div class="op-card alert">
+        <div class="op-num">Opération 04</div>
+        <div class="op-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="op-title">Alerte stock faible</div>
+        <div class="op-desc">Chaque produit possède son propre seuil d'alerte défini manuellement. Dès que le stock passe en dessous, le statut bascule automatiquement en alerte dans l'interface.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ APERÇU INTERFACE STOCK ══ -->
+  <section class="stock-section reveal">
+    <div class="section-tag">Interface</div>
+    <h2 class="section-h2">Visualisation des niveaux en temps réel</h2>
+    <p class="section-intro">
+      L'interface affiche l'état du stock par produit et par agence,
+      avec un code couleur immédiat — vert, orange ou rouge — selon le niveau relatif au seuil d'alerte configuré.
+    </p>
+
+    <div class="stock-ui">
+      <div class="stock-ui-bar">
+        <div class="stock-ui-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Stocks matériel informatique
+        </div>
+        <div class="stock-ui-filters">
+          <span class="stock-filter active">Tous</span>
+          <span class="stock-filter">Nantes</span>
+          <span class="stock-filter">La Roche</span>
+          <span class="stock-filter">Cholet</span>
+        </div>
+      </div>
+
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>Agence</th>
+            <th>Stock</th>
+            <th>Seuil d'alerte</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="product">Laptop Dell Latitude 5530</td>
+            <td class="agency">Nantes — Hub</td>
+            <td>
+              <div class="stock-gauge">
+                <div class="gauge-bar"><div class="gauge-fill ok" style="width:82%"></div></div>
+                <span class="gauge-num ok">14</span>
+              </div>
+            </td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--txt-dim);">≥ 5</td>
+            <td><span class="stock-badge ok">OK</span></td>
+          </tr>
+          <tr>
+            <td class="product">Écran 24" Dell P2422H</td>
+            <td class="agency">La Roche-sur-Yon</td>
+            <td>
+              <div class="stock-gauge">
+                <div class="gauge-bar"><div class="gauge-fill warn" style="width:30%"></div></div>
+                <span class="gauge-num warn">3</span>
+              </div>
+            </td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--txt-dim);">≥ 3</td>
+            <td><span class="stock-badge warn">Limite</span></td>
+          </tr>
+          <tr>
+            <td class="product">Souris sans fil Logitech M650</td>
+            <td class="agency">Cholet</td>
+            <td>
+              <div class="stock-gauge">
+                <div class="gauge-bar"><div class="gauge-fill low" style="width:12%"></div></div>
+                <span class="gauge-num low">1</span>
+              </div>
+            </td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--txt-dim);">≥ 5</td>
+            <td><span class="stock-badge low">Alerte</span></td>
+          </tr>
+          <tr>
+            <td class="product">Câble USB-C Thunderbolt</td>
+            <td class="agency">Nantes — Hub</td>
+            <td>
+              <div class="stock-gauge">
+                <div class="gauge-bar"><div class="gauge-fill ok" style="width:95%"></div></div>
+                <span class="gauge-num ok">22</span>
+              </div>
+            </td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--txt-dim);">≥ 4</td>
+            <td><span class="stock-badge ok">OK</span></td>
+          </tr>
+          <tr>
+            <td class="product">Dock USB-C HP G5</td>
+            <td class="agency">Saint-Nazaire</td>
+            <td>
+              <div class="stock-gauge">
+                <div class="gauge-bar"><div class="gauge-fill low" style="width:0%"></div></div>
+                <span class="gauge-num low">0</span>
+              </div>
+            </td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--txt-dim);">≥ 2</td>
+            <td><span class="stock-badge low">Alerte</span></td>
+          </tr>
+          <tr>
+            <td class="product">Clavier AZERTY filaire HP</td>
+            <td class="agency">La Roche-sur-Yon</td>
+            <td>
+              <div class="stock-gauge">
+                <div class="gauge-bar"><div class="gauge-fill ok" style="width:70%"></div></div>
+                <span class="gauge-num ok">8</span>
+              </div>
+            </td>
+            <td style="font-family:var(--mono);font-size:11px;color:var(--txt-dim);">≥ 3</td>
+            <td><span class="stock-badge ok">OK</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ RÉSEAU AGENCES ══ -->
+  <section class="agencies-section reveal">
+    <div class="section-tag">Organisation</div>
+    <h2 class="section-h2">Un hub central, plusieurs agences</h2>
+    <p class="section-intro">
+      Les commandes de matériel sont passées et réceptionnées depuis Nantes,
+      puis distribuées vers les agences régionales selon leurs besoins.
+      L'application gère ces stocks de façon indépendante par agence.
+    </p>
+
+    <div class="agencies-layout">
+
+      <div class="hub-card">
+        <div class="hub-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Hub de commandes
+        </div>
+        <div class="hub-name">Nantes</div>
+        <div class="hub-sub">Toutes les commandes fournisseurs transitent par Nantes. Le service méthodes réceptionne le matériel, l'entre en stock dans l'application et organise la livraison vers les agences qui en ont besoin.</div>
+        <div class="hub-tags">
+          <span class="hub-tag">Commandes fournisseurs</span>
+          <span class="hub-tag">Réception matériel</span>
+          <span class="hub-tag">Distribution agences</span>
+        </div>
+      </div>
+
+      <div class="agencies-grid">
+        <div class="agency-row">
+          <div class="agency-dot"></div>
+          <div class="agency-name">La Roche-sur-Yon</div>
+          <div class="agency-role">Service méthodes</div>
+          <div class="agency-arrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </div>
+        </div>
+        <div class="agency-row">
+          <div class="agency-dot"></div>
+          <div class="agency-name">Cholet</div>
+          <div class="agency-role">Service méthodes</div>
+          <div class="agency-arrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </div>
+        </div>
+        <div class="agency-row">
+          <div class="agency-dot"></div>
+          <div class="agency-name">Saint-Nazaire</div>
+          <div class="agency-role">Service méthodes</div>
+          <div class="agency-arrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </div>
+        </div>
+        <div class="agency-row" style="border-color:var(--em-line);opacity:.5;">
+          <div class="agency-dot" style="background:var(--txt-dim)"></div>
+          <div class="agency-name" style="color:var(--txt-mid);">Autres agences</div>
+          <div class="agency-role">À définir</div>
+          <div class="agency-arrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ CONTENU + SIDEBAR ══ -->
+  <div class="proj-content">
+    <div class="proj-main">
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Contexte</div>
+        <h2 class="proj-section-title">Reprendre le contrôle du matériel</h2>
+        <div class="proj-section-body">
+          <p>
+            Le service méthodes d'INEO Atlantique gère un parc de matériel informatique
+            réparti sur plusieurs agences — laptops, écrans, périphériques, câbles, docking stations.
+            Sans outil centralisé, les inventaires étaient tenus sur des fichiers Excel locaux,
+            sans vision consolidée ni alertes sur les ruptures imminentes.
+          </p>
+          <p>
+            L'objectif était de créer une application <strong>simple, directement opérationnelle</strong>
+            dans l'environnement Microsoft 365 — sans flux automatisé complexe,
+            mais avec une lecture immédiate de l'état des stocks,
+            des alertes configurables par produit et une gestion fluide des mouvements
+            depuis chaque agence.
+          </p>
+        </div>
+
+        <div class="no-automate">
+          <div class="no-automate-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div>
+            <div class="no-automate-title">Application sans Power Automate</div>
+            <div class="no-automate-desc">Contrairement aux autres projets du portfolio, cette application ne comporte pas de flux Power Automate. Toute la logique — alertes, calculs de stock, statuts — est gérée directement dans Power Apps via des formules PowerFX, sans automatisation externe.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnalités</div>
+        <h2 class="proj-section-title">Ce que l'application fait</h2>
+        <ul class="feat-list">
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Entrées en stock par agence</div>
+              <div class="feat-desc">Chaque réception de matériel depuis Nantes est saisie dans l'application avec le produit, la quantité, l'agence de destination et la date — le stock se met à jour immédiatement dans Lists Microsoft.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">Mise à jour et correction d'inventaire</div>
+              <div class="feat-desc">Les quantités peuvent être ajustées à tout moment — correction d'inventaire, transfert entre agences ou modification d'une référence produit, avec traçabilité dans la base.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Sortie définitive de stock</div>
+              <div class="feat-desc">Un article obsolète ou perdu est sorti du stock de façon propre — il n'est plus comptabilisé mais reste tracé dans l'historique avec la date et le motif de sortie.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--warn)"></div>
+            <div>
+              <div class="feat-title">Alertes de stock faible configurables</div>
+              <div class="feat-desc">Chaque produit dispose de son propre seuil d'alerte défini dans la base. Dès que le stock descend en dessous, le statut passe automatiquement en alerte — visible immédiatement dans l'interface sans aucun flux externe.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot"></div>
+            <div>
+              <div class="feat-title">Gestion multi-agences</div>
+              <div class="feat-desc">Le stock est géré de façon indépendante pour chaque agence (Nantes, La Roche-sur-Yon, Cholet, Saint-Nazaire…). Chaque responsable consulte et met à jour le stock de son site sans interférer avec les autres.</div>
+            </div>
+          </li>
+          <li class="feat-item">
+            <div class="feat-dot" style="background:var(--em-dim)"></div>
+            <div>
+              <div class="feat-title">100 % PowerFX — sans Power Automate</div>
+              <div class="feat-desc">Toute la logique de l'application est portée par des formules PowerFX natives : calcul des statuts d'alerte, filtres par agence, contrôles de saisie. Pas de dépendance externe, déploiement minimal.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <aside class="proj-sidebar">
+
+      <div class="sidebar-block reveal">
+        <div class="sidebar-label">Statut</div>
+        <div class="proj-status">
+          <div class="status-dot"></div>
+          <span class="status-text">En production — INEO Atlantique</span>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Chiffres clés</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-num">4<em>+</em></div>
+            <div class="metric-label">Agences gérées</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">4</div>
+            <div class="metric-label">Opérations stock</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num"><em>∞</em></div>
+            <div class="metric-label">Seuils par produit</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-num">0</div>
+            <div class="metric-label">Flux Automate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Stack technique</div>
+        <ul class="stack-list">
+          <li class="stack-item">
+            <span class="stack-name">Power Apps</span>
+            <span class="stack-role">Frontend</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">PowerFX</span>
+            <span class="stack-role">Logique & alertes</span>
+          </li>
+          <li class="stack-item">
+            <span class="stack-name">Lists Microsoft</span>
+            <span class="stack-role">Base de données</span>
+          </li>
+        </ul>
+        <!-- Nota bene sans automate -->
+        <div style="margin-top:12px;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--txt-dim);letter-spacing:.10em;text-transform:uppercase;margin-bottom:5px;">Pas de</div>
+          <div style="font-size:12px;color:var(--txt-dim);text-decoration:line-through;opacity:.5;">Power Automate</div>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  </main>
+
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const N = 150, D = 150, R = 130;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function init() {
+        particles = [];
+        for (let i = 0; i < N; i++)
+          particles.push({ x: Math.random()*W, y: Math.random()*H, vx: rand(-0.22,0.22), vy: rand(-0.18,0.18), r: rand(1.5,2.8), o: rand(0.55,0.95) });
+      }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        for (let i=0;i<particles.length;i++) for (let j=i+1;j<particles.length;j++) {
+          const a=particles[i],b=particles[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+          if(d<D){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(${EM},${(1-d/D)*0.22})`;ctx.lineWidth=0.8;ctx.stroke();}
+        }
+        particles.forEach(p => {
+          const mdx=mouse.x-p.x,mdy=mouse.y-p.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
+          if(md<R){const f=(1-md/R)*0.012;p.vx+=mdx*f;p.vy+=mdy*f;}
+          const s=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+          if(s<0.12){p.vx+=(Math.random()-.5)*.08;p.vy+=(Math.random()-.5)*.08;}
+          if(s>0.8){p.vx=p.vx/s*.8;p.vy=p.vy/s*.8;}
+          p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0){p.x=0;p.vx*=-1;}if(p.x>W){p.x=W;p.vx*=-1;}
+          if(p.y<0){p.y=0;p.vy*=-1;}if(p.y>H){p.y=H;p.vy*=-1;}
+          const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+          g.addColorStop(0,`rgba(${EM},${p.o*0.35})`);g.addColorStop(1,`rgba(${EM},0)`);
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r*4,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${EM},${p.o})`;ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+      resize(); init(); requestAnimationFrame(draw);
+    })();
+
+    const cursor = document.getElementById('cursor'), ring = document.getElementById('cursor-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+    (function tick(){ cursor.style.left=mx+'px'; cursor.style.top=my+'px'; rx+=(mx-rx)*0.13; ry+=(my-ry)*0.13; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(tick); })();
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if(!e.isIntersecting) return; e.target.classList.add('visible'); obs.unobserve(e.target); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    /* ── Slider captures ── */
+    (function() {
+      const track  = document.getElementById('screensTrack');
+      const dots   = document.querySelectorAll('.screen-dot');
+      const total  = document.querySelectorAll('.screen-slide').length;
+      let current  = 0;
+      function goTo(n) {
+        current = (n + total) % total;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+      document.getElementById('screenPrev').addEventListener('click', () => goTo(current - 1));
+      document.getElementById('screenNext').addEventListener('click', () => goTo(current + 1));
+      dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+      let startX = 0;
+      track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      track.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - startX; if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1)); });
+    })();
+
+  </script>
+
+</body>
+</html>

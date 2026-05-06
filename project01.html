@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion des congés — Antoine Bonnet</title>
+  <meta name="description" content="Application Power Apps de gestion des congés développée chez INEO Atlantique. Logique de cascading, validation multi-niveaux, intégration Outlook." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --em:      #2dd4a0;
+      --em-dim:  #1faa80;
+      --em-deep: #0d7a5a;
+      --em-bg:   rgba(45,212,160,0.06);
+      --em-line: rgba(45,212,160,0.18);
+      --bg:      #080f0c;
+      --bg2:     #0d1712;
+      --surface: #0f1a15;
+      --line:    rgba(45,212,160,0.10);
+      --line2:   rgba(45,212,160,0.16);
+      --txt:     #dfe8e4;
+      --txt-mid: #8aada0;
+      --txt-dim: #4f6e62;
+      --serif:   'DM Serif Display', Georgia, serif;
+      --sans:    'DM Sans', sans-serif;
+      --mono:    'DM Mono', monospace;
+      --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--txt); font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; cursor: none; }
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    #cursor { position: fixed; width: 8px; height: 8px; background: var(--em); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: width .25s var(--ease), height .25s var(--ease); }
+    #cursor-ring { position: fixed; width: 32px; height: 32px; border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: width .3s var(--ease), height .3s var(--ease), opacity .2s; }
+    body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring, body:has(button:hover) #cursor-ring { width: 52px; height: 52px; opacity: .35; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 64px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.88); backdrop-filter: blur(16px); }
+    .nav-logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--em); letter-spacing: .04em; text-decoration: none; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--txt-dim); text-decoration: none; text-transform: uppercase; transition: color .2s; }
+    .nav-links a:hover { color: var(--txt); }
+    .nav-cta { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--em); text-decoration: none; text-transform: uppercase; border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px; background: var(--em-bg); transition: background .2s, border-color .2s; }
+    .nav-cta:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    .proj-subnav { position: fixed; top: 64px; left: 0; right: 0; z-index: 99; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 44px; border-bottom: 1px solid var(--line); background: rgba(8,15,12,0.80); backdrop-filter: blur(12px); }
+    .proj-subnav-link { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--txt-dim); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color .2s; }
+    .proj-subnav-link:hover { color: var(--em); }
+    .proj-subnav-link svg { transition: transform .2s; }
+    .proj-subnav-link.prev:hover svg { transform: translateX(-3px); }
+    .proj-subnav-link.next:hover svg { transform: translateX(3px); }
+
+    /* ═══ HERO ═══ */
+    .hero-bg-num { position: absolute; right: 48px; bottom: 40px; font-family: var(--serif); font-size: 30vw; line-height: 1; color: rgba(45,212,160,0.025); letter-spacing: -.05em; pointer-events: none; user-select: none; }
+    .proj-hero-breadcrumb { font-family: var(--mono); font-size: 11px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 36px; animation: fadeUp .8s var(--ease) both; }
+    .proj-hero-breadcrumb a { color: var(--txt-dim); text-decoration: none; transition: color .2s; }
+    .proj-hero-breadcrumb a:hover { color: var(--em); }
+    .proj-hero-breadcrumb span { color: var(--em); }
+    .proj-hero-title { font-family: var(--serif); font-size: clamp(48px, 7.5vw, 100px); line-height: 1.3; letter-spacing: -.03em; color: var(--txt); margin-bottom: 36px; animation: fadeUp .8s .08s var(--ease) both; }
+    .proj-hero-title em { font-style: italic; display: block; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; padding-right: 6px; }
+    .proj-hero-meta { display: flex; align-items: stretch; gap: 0; border-top: 1px solid var(--line); padding-top: 28px; animation: fadeUp .8s .18s var(--ease) both; }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; padding-right: 40px; margin-right: 40px; border-right: 1px solid var(--line); }
+    .meta-item:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+    .meta-key { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .14em; text-transform: uppercase; }
+    .meta-val { font-size: 14px; color: var(--txt); font-weight: 500; }
+    .meta-val-em { color: var(--em); font-family: var(--mono); font-size: 13px; }
+    .proj-hero-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; align-items: flex-end; }
+    .ptag { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--em-line); border-radius: 20px; color: var(--em-dim); background: var(--em-bg); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+
+    /* ═══ SLIDER CAPTURES — portrait mobile ═══ */
+    .screens-section { border-bottom: 1px solid var(--line); padding: 80px 48px; }
+    .screens-header { margin-bottom: 36px; }
+
+    .screens-slider-wrap { position: relative; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); overflow: hidden; }
+    .screens-track { display: flex; transition: transform .55s cubic-bezier(0.16,1,0.3,1); will-change: transform; }
+    .screen-slide { flex: 0 0 100%; display: flex; flex-direction: column; }
+
+    /* Portrait : hauteur généreuse pour les captures 440×920 */
+    .screen-slide img {
+      width: 100%;
+      height: 520px;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .screen-caption { display: flex; align-items: flex-start; gap: 16px; padding: 16px 22px; background: var(--surface); }
+    .screen-num { font-family: var(--mono); font-size: 10px; color: var(--em); letter-spacing: .14em; flex-shrink: 0; margin-top: 2px; }
+    .screen-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .screen-desc { font-size: 12px; color: var(--txt-mid); line-height: 1.55; }
+
+    .screen-btn { position: absolute; top: 260px; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--em-line); background: rgba(8,15,12,0.82); backdrop-filter: blur(8px); color: var(--txt); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s, border-color .2s, color .2s; z-index: 2; }
+    .screen-btn:hover { background: var(--em-bg); border-color: var(--em); color: var(--em); }
+    .screen-prev { left: 14px; }
+    .screen-next { right: 14px; }
+
+    .screen-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }
+    .screen-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--txt-dim); cursor: pointer; transition: background .2s, transform .2s; }
+    .screen-dot.active { background: var(--em); transform: scale(1.4); }
+
+    /* ═══ CONTENU ═══ */
+    .proj-content { display: grid; grid-template-columns: 1fr 320px; gap: 0; border-bottom: 1px solid var(--line); }
+    .proj-main { padding: 96px 80px 96px 48px; border-right: 1px solid var(--line); }
+    .proj-section { margin-bottom: 72px; }
+    .proj-section:last-child { margin-bottom: 0; }
+    .proj-section-tag { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .proj-section-tag::before { content: ''; width: 20px; height: 1px; flex-shrink: 0; background: var(--em); }
+    .proj-section-title { font-family: var(--serif); font-size: clamp(24px, 3vw, 36px); line-height: 1.05; letter-spacing: -.02em; color: var(--txt); margin-bottom: 24px; }
+    .proj-section-body { font-size: 15px; color: var(--txt-mid); line-height: 1.85; }
+    .proj-section-body p + p { margin-top: 16px; }
+    .proj-section-body strong { color: var(--txt); font-weight: 500; }
+
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 0; margin-top: 24px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .feat-item { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--line); transition: background .25s; }
+    .feat-item:last-child { border-bottom: none; }
+    .feat-item:hover { background: var(--bg2); }
+    .feat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--em); flex-shrink: 0; margin-top: 7px; }
+    .feat-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 2px; }
+    .feat-desc { font-size: 13px; color: var(--txt-mid); line-height: 1.55; }
+
+    .proj-timeline { list-style: none; margin-top: 24px; }
+    .ptl-item { display: grid; grid-template-columns: 28px 1fr; gap: 16px; padding-bottom: 36px; position: relative; }
+    .ptl-item:last-child { padding-bottom: 0; }
+    .ptl-item::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 1px; background: linear-gradient(180deg, var(--em-dim), transparent); }
+    .ptl-item:last-child::before { display: none; }
+    .ptl-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--em); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 0 4px rgba(45,212,160,0.08); }
+    .ptl-dot svg { width: 12px; height: 12px; color: var(--em); }
+    .ptl-step { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+    .ptl-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 6px; }
+    .ptl-desc { font-size: 14px; color: var(--txt-mid); line-height: 1.7; }
+
+    .proj-sidebar { padding: 96px 48px; display: flex; flex-direction: column; gap: 48px; }
+    .sidebar-label { font-family: var(--mono); font-size: 9px; color: var(--em); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .sidebar-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line2), transparent); }
+    .stack-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .stack-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; transition: border-color .2s; }
+    .stack-item:hover { border-color: var(--em-line); }
+    .stack-name { font-size: 13px; color: var(--txt); font-weight: 500; }
+    .stack-role { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 16px; position: relative; overflow: hidden; }
+    .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--em), transparent); }
+    .metric-num { font-family: var(--serif); font-size: 32px; line-height: 1; letter-spacing: -.02em; color: var(--txt); }
+    .metric-num em { font-style: normal; background: linear-gradient(135deg, var(--em), var(--em-dim)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .metric-label { font-family: var(--mono); font-size: 9px; color: var(--txt-dim); letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; }
+    .proj-status { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: rgba(45,212,160,0.06); border: 1px solid rgba(45,212,160,0.2); border-radius: 8px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--em); flex-shrink: 0; animation: statusPulse 2.5s ease-in-out infinite; }
+    @keyframes statusPulse { 0% { box-shadow: 0 0 0 0 rgba(45,212,160,.5); } 70% { box-shadow: 0 0 0 6px rgba(45,212,160,0); } 100% { box-shadow: 0 0 0 0 rgba(45,212,160,0); } }
+    .status-text { font-family: var(--mono); font-size: 11px; color: var(--em); letter-spacing: .06em; }
+
+    footer { padding: 22px 48px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .footer-copy { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); letter-spacing: .06em; }
+    .footer-back { font-family: var(--mono); font-size: 10px; color: var(--txt-dim); text-decoration: none; letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+    .footer-back:hover { color: var(--em); }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .rd1 { transition-delay: .1s; }
+    .rd2 { transition-delay: .2s; }
+
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .proj-hero { padding-left: 20px; padding-right: 20px; }
+      .proj-hero-meta { flex-wrap: wrap; gap: 20px; }
+      .meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+      .proj-hero-tags { margin-left: 0; margin-top: 16px; }
+      .screens-section { padding: 48px 20px; }
+      .screen-slide img { height: 340px; }
+      .screen-btn { top: 170px; }
+      .proj-content { grid-template-columns: 1fr; }
+      .proj-main { padding: 60px 20px; border-right: none; }
+      .proj-sidebar { padding: 0 20px 60px; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="projects.html">Projets</a></li>
+      <li><a href="about.html">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <div class="proj-subnav">
+    <a href="projects.html" class="proj-subnav-link prev">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M12 7H2M6 2L1 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour aux projets
+    </a>
+    <a href="project02.html" class="proj-subnav-link next">
+      Projet suivant — Automatisation des contrats
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <!-- ══ HERO ══ -->
+  <div class="proj-hero">
+    
+    
+    <div class="proj-hero-breadcrumb">
+      <a href="index.html">Accueil</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <a href="projects.html">Projets</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Gestion des congés</span>
+    </div>
+    <h1 class="proj-hero-title">Gestion<br><em>des congés</em></h1>
+    <div class="proj-hero-meta">
+      <div class="meta-item"><span class="meta-key">Contexte</span><span class="meta-val">INEO Atlantique Services</span></div>
+      <div class="meta-item"><span class="meta-key">Période</span><span class="meta-val">2023 → En production</span></div>
+      <div class="meta-item"><span class="meta-key">Rôle</span><span class="meta-val">Développeur seul</span></div>
+      <div class="meta-item"><span class="meta-key">Statut</span><span class="meta-val meta-val-em">● Déployé</span></div>
+      <div class="proj-hero-tags">
+        <span class="ptag">Power Apps</span><span class="ptag">Power Automate</span>
+        <span class="ptag">SharePoint</span><span class="ptag">Outlook</span><span class="ptag">PowerFX</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDER CAPTURES ══ -->
+  <section class="screens-section reveal">
+    <div class="screens-header">
+      <div class="proj-section-tag">Aperçu de l'application</div>
+      <h2 class="proj-section-title" style="margin-bottom:6px;">L'interface en images</h2>
+      <p style="font-size:14px;color:var(--txt-mid);">Captures réelles de l'application Power Apps — interface mobile.</p>
+    </div>
+
+    <div class="screens-slider-wrap">
+      <div class="screens-track" id="screensTrack">
+
+        <div class="screen-slide">
+          <img src="Image/home_conges1.png" alt="Accueil collaborateur" />
+          <div class="screen-caption">
+            <span class="screen-num">01</span>
+            <div>
+              <div class="screen-title">Accueil collaborateur</div>
+              <div class="screen-desc">Vue principale du technicien : soldes de congés restants (CP, RTT…), accès aux différents types de demandes et à l'historique.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="Image/home_conges2.png" alt="Accueil admin" />
+          <div class="screen-caption">
+            <span class="screen-num">02</span>
+            <div>
+              <div class="screen-title">Accueil administrateur</div>
+              <div class="screen-desc">Interface de gestion : vue globale des équipes, demandes en attente de validation, accès aux outils de correction des soldes.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="Image/form_cp.png" alt="Formulaire congés payés" />
+          <div class="screen-caption">
+            <span class="screen-num">03</span>
+            <div>
+              <div class="screen-title">Formulaire de demande — Congés payés</div>
+              <div class="screen-desc">Saisie de la période, contrôle du délai de prévenance d'un mois, décompte automatique des jours selon le calendrier.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="Image/recap_conges.png" alt="Récapitulatif congés" />
+          <div class="screen-caption">
+            <span class="screen-num">04</span>
+            <div>
+              <div class="screen-title">Récapitulatif des congés</div>
+              <div class="screen-desc">Historique complet des demandes passées et en cours avec statut, dates et type de congé — consultable à tout moment.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="Image/support_conges.png" alt="Demande de correction" />
+          <div class="screen-caption">
+            <span class="screen-num">05</span>
+            <div>
+              <div class="screen-title">Demande de correction</div>
+              <div class="screen-desc">Formulaire de signalement d'erreur sur un solde ou une demande — transmis directement au service RH via Power Automate.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="Image/selec_tuto.png" alt="Sélection tutoriel" />
+          <div class="screen-caption">
+            <span class="screen-num">06</span>
+            <div>
+              <div class="screen-title">Sélection de tutoriel</div>
+              <div class="screen-desc">Accès aux guides vidéo intégrés à l'application pour accompagner les utilisateurs dans leurs premières prises en main.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-slide">
+          <img src="Image/tuto_video.png" alt="Tutoriel vidéo" />
+          <div class="screen-caption">
+            <span class="screen-num">07</span>
+            <div>
+              <div class="screen-title">Tutoriel vidéo intégré</div>
+              <div class="screen-desc">Lecture du tutoriel directement dans l'application — pas besoin de sortir de Power Apps pour comprendre une fonctionnalité.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="screen-btn screen-prev" id="screenPrev" aria-label="Précédent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="screen-btn screen-next" id="screenNext" aria-label="Suivant">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+    <div class="screen-dots" id="screenDots">
+      <div class="screen-dot active"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+      <div class="screen-dot"></div>
+    </div>
+  </section>
+
+  <!-- ══ CONTENU + SIDEBAR ══ -->
+  <div class="proj-content">
+    <div class="proj-main">
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Contexte</div>
+        <h2 class="proj-section-title">Une problématique métier réelle</h2>
+        <div class="proj-section-body">
+          <p>INEO Atlantique Services fait face à un défi lié à la mobilité de ses techniciens, qui peuvent intervenir sur l'ensemble du territoire français. Pour respecter le <strong>délai de prévenance d'un mois</strong> imposé par les accords d'entreprise, la gestion des congés devait être dématérialisée.</p>
+          <p>Avant ce projet, les demandes transitaient par fiches papiers — source de conflits, d'erreurs sur les soldes et de pertes d'informations. L'objectif était de centraliser, tracer et automatiser l'ensemble du processus.</p>
+        </div>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Démarche</div>
+        <h2 class="proj-section-title">Analyse &amp; conception</h2>
+        <div class="proj-section-body">
+          <p>J'ai élaboré un <strong>cahier des charges</strong> en collaboration avec toutes les parties prenantes : collaborateurs, responsables d'équipe, direction et service RH.</p>
+          <p>La contrainte principale était d'utiliser l'écosystème Microsoft déjà en place (Power Platform, Microsoft 365) sans licence premium supplémentaire. Cette contrainte a orienté les choix techniques vers Power Apps Canvas, Power Automate et SharePoint comme couche de données.</p>
+        </div>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Déroulement</div>
+        <h2 class="proj-section-title">Les étapes du projet</h2>
+        <ol class="proj-timeline">
+          <li class="ptl-item">
+            <div class="ptl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div><div class="ptl-step">Étape 01</div><div class="ptl-title">Cadrage &amp; cahier des charges</div><div class="ptl-desc">Interviews des parties prenantes, identification des règles métier (délai de prévenance, types de congés, hiérarchie de validation), rédaction du cahier des charges fonctionnel.</div></div>
+          </li>
+          <li class="ptl-item">
+            <div class="ptl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+            <div><div class="ptl-step">Étape 02</div><div class="ptl-title">Architecture des données SharePoint</div><div class="ptl-desc">Conception des listes SharePoint : demandes, compteurs par employé (CPP/CP5/CPA), historique des validations. Modélisation des relations et des droits d'accès par rôle.</div></div>
+          </li>
+          <li class="ptl-item">
+            <div class="ptl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <div><div class="ptl-step">Étape 03</div><div class="ptl-title">Développement Power Apps</div><div class="ptl-desc">Création de l'application Canvas multi-écrans : formulaire de demande, tableau de bord collaborateur, interface administrateur avec vue d'ensemble. Logique de cascading entre les compteurs de congés en PowerFX.</div></div>
+          </li>
+          <li class="ptl-item">
+            <div class="ptl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.3 2 2 0 0 1 3.59 2h3a2 2 0 0 1 2 1.72c.2.75.45 1.49.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.83.61 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+            <div><div class="ptl-step">Étape 04</div><div class="ptl-title">Automatisation Power Automate</div><div class="ptl-desc">Flows d'automatisation : notifications Outlook à chaque étape de validation, envoi d'invitation calendrier au collaborateur et au responsable, mise à jour automatique des compteurs après validation/refus.</div></div>
+          </li>
+          <li class="ptl-item">
+            <div class="ptl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+            <div><div class="ptl-step">Étape 05</div><div class="ptl-title">Tests &amp; validation</div><div class="ptl-desc">Phase pilote avec une équipe restreinte, recueil des retours, itérations.</div></div>
+          </li>
+          <li class="ptl-item">
+            <div class="ptl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div><div class="ptl-step">Étape 06</div><div class="ptl-title">Mise en production &amp; formation</div><div class="ptl-desc">Déploiement sur l'ensemble de l'entreprise, sessions de formation pour les utilisateurs et les responsables. L'application est aujourd'hui utilisée en production chez INEO Atlantique.</div></div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="proj-section reveal">
+        <div class="proj-section-tag">Fonctionnalités</div>
+        <h2 class="proj-section-title">Ce que l'application fait</h2>
+        <ul class="feat-list">
+          <li class="feat-item"><div class="feat-dot"></div><div><div class="feat-title">Prise de congés multi-types</div><div class="feat-desc">Congé payé, Congé sans solde, congé par anticipation, RTT, T0, Événement familiaux et récupération avec logique de cascading automatique entre les compteurs selon les règles de l'accord d'entreprise.</div></div></li>
+          <li class="feat-item"><div class="feat-dot" style="background:var(--em-dim)"></div><div><div class="feat-title">Validation hiérarchique</div><div class="feat-desc">Circuit de validation multi-niveaux : collaborateur → responsable d'équipe → RH. Chaque étape déclenche une notification Outlook.</div></div></li>
+          <li class="feat-item"><div class="feat-dot"></div><div><div class="feat-title">Intégration calendrier Outlook</div><div class="feat-desc">Création automatique d'événements dans les calendriers du collaborateur et du responsable dès validation de la demande.</div></div></li>
+          <li class="feat-item"><div class="feat-dot" style="background:var(--em-dim)"></div><div><div class="feat-title">Tableau de bord &amp; récapitulatif</div><div class="feat-desc">Vue personnalisée des soldes restants, historique des demandes, statut en temps réel de chaque demande en cours.</div></div></li>
+          <li class="feat-item"><div class="feat-dot"></div><div><div class="feat-title">Interface administrateur</div><div class="feat-desc">Accès SuperAdministrateur et Administrateur avec vue globale des équipes, gestion des droits, correction des soldes et validation/refus des demandes.</div></div></li>
+          <li class="feat-item"><div class="feat-dot" style="background:var(--em-dim)"></div><div><div class="feat-title">Responsive &amp; accessible</div><div class="feat-desc">Utilisable depuis n'importe quel appareil (PC, tablette, mobile) par les techniciens terrain.</div></div></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <aside class="proj-sidebar">
+      <div class="sidebar-block reveal">
+        <div class="sidebar-label">Statut</div>
+        <div class="proj-status"><div class="status-dot"></div><span class="status-text">En production — INEO Atlantique</span></div>
+      </div>
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Chiffres clés</div>
+        <div class="metrics-grid">
+          <div class="metric-card"><div class="metric-num">7</div><div class="metric-label">Types de congés</div></div>
+          <div class="metric-card"><div class="metric-num">2<em>ans</em></div><div class="metric-label">En production</div></div>
+          <div class="metric-card"><div class="metric-num">6<em>+</em></div><div class="metric-label">Écrans applicatifs</div></div>
+          <div class="metric-card"><div class="metric-num">∞</div><div class="metric-label">Flows actifs</div></div>
+        </div>
+      </div>
+      <div class="sidebar-block reveal rd1">
+        <div class="sidebar-label">Stack technique</div>
+        <ul class="stack-list">
+          <li class="stack-item"><span class="stack-name">Power Apps</span><span class="stack-role">Frontend</span></li>
+          <li class="stack-item"><span class="stack-name">Power Automate</span><span class="stack-role">Workflows</span></li>
+          <li class="stack-item"><span class="stack-name">SharePoint</span><span class="stack-role">Base de données</span></li>
+          <li class="stack-item"><span class="stack-name">Outlook / Office 365</span><span class="stack-role">Notifications</span></li>
+          <li class="stack-item"><span class="stack-name">PowerFX</span><span class="stack-role">Logique métier</span></li>
+        </ul>
+      </div>
+    </aside>
+
+  </div>
+
+  </main>
+
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const N = 150, D = 150, R = 130;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function init() { particles = []; for (let i=0;i<N;i++) particles.push({x:Math.random()*W,y:Math.random()*H,vx:rand(-0.22,0.22),vy:rand(-0.18,0.18),r:rand(1.5,2.8),o:rand(0.55,0.95)}); }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        for (let i=0;i<particles.length;i++) for (let j=i+1;j<particles.length;j++) {
+          const a=particles[i],b=particles[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+          if(d<D){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=`rgba(${EM},${(1-d/D)*0.22})`;ctx.lineWidth=0.8;ctx.stroke();}
+        }
+        particles.forEach(p=>{
+          const mdx=mouse.x-p.x,mdy=mouse.y-p.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
+          if(md<R){const f=(1-md/R)*0.012;p.vx+=mdx*f;p.vy+=mdy*f;}
+          const s=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+          if(s<0.12){p.vx+=(Math.random()-.5)*.08;p.vy+=(Math.random()-.5)*.08;}
+          if(s>0.8){p.vx=p.vx/s*.8;p.vy=p.vy/s*.8;}
+          p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0){p.x=0;p.vx*=-1;}if(p.x>W){p.x=W;p.vx*=-1;}
+          if(p.y<0){p.y=0;p.vy*=-1;}if(p.y>H){p.y=H;p.vy*=-1;}
+          const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*4);
+          g.addColorStop(0,`rgba(${EM},${p.o*0.35})`);g.addColorStop(1,`rgba(${EM},0)`);
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r*4,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${EM},${p.o})`;ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      window.addEventListener('resize',resize);
+      window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+      resize();init();requestAnimationFrame(draw);
+    })();
+
+    const cursor=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+    let mx=0,my=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+    (function tick(){cursor.style.left=mx+'px';cursor.style.top=my+'px';rx+=(mx-rx)*0.13;ry+=(my-ry)*0.13;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(tick);})();
+
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add('visible');obs.unobserve(e.target);});},{threshold:0.08});
+    document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+    /* ── Slider captures ── */
+    (function() {
+      const track  = document.getElementById('screensTrack');
+      const dots   = document.querySelectorAll('.screen-dot');
+      const total  = document.querySelectorAll('.screen-slide').length;
+      let current  = 0;
+      function goTo(n) {
+        current = (n + total) % total;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+      document.getElementById('screenPrev').addEventListener('click', () => goTo(current - 1));
+      document.getElementById('screenNext').addEventListener('click', () => goTo(current + 1));
+      dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+      let startX = 0;
+      track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      track.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - startX; if (Math.abs(dx) > 40) goTo(current + (dx < 0 ? 1 : -1)); });
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antoine Bonnet — CV & À propos</title>
+  <meta name="description" content="Parcours, compétences et expériences d'Antoine Bonnet, développeur Power Platform en alternance chez INEO Atlantique, L3 Informatique CNAM." />
+  <meta name="author" content="Antoine Bonnet" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ─── RESET & TOKENS ────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --em:        #2dd4a0;
+      --em-dim:    #1faa80;
+      --em-deep:   #0d7a5a;
+      --em-glow:   rgba(45,212,160,0.15);
+      --bg:        #080f0c;
+      --bg2:       #0d1712;
+      --bg3:       #111e18;
+      --surface:   #0f1a15;
+      --line:      rgba(45,212,160,0.10);
+      --line2:     rgba(45,212,160,0.18);
+      --line-w:    rgba(45,212,160,0.08);
+      --txt:       #dfe8e4;
+      --txt-mid:   #8aada0;
+      --txt-dim:   #4f6e62;
+      --serif:     'DM Serif Display', Georgia, serif;
+      --sans:      'DM Sans', sans-serif;
+      --mono:      'DM Mono', monospace;
+      --ease:      cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    #particles-canvas {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    #music-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    nav, main, footer { position: relative; z-index: 1; }
+
+    /* ─── CURSEUR ────────────────────────────────────────────  */
+    #cursor {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--em); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .25s var(--ease), height .25s var(--ease);
+    }
+    #cursor-ring {
+      position: fixed; width: 32px; height: 32px;
+      border: 1.5px solid rgba(45,212,160,0.35); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: transform .18s var(--ease), width .3s var(--ease), height .3s var(--ease), opacity .2s;
+    }
+    body:has(a:hover) #cursor,
+    body:has(button:hover) #cursor  { width: 16px; height: 16px; }
+    body:has(a:hover) #cursor-ring,
+    body:has(button:hover) #cursor-ring { width: 48px; height: 48px; opacity: .4; }
+
+    /* ─── NAV ────────────────────────────────────────────────  */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8,15,12,0.85);
+      backdrop-filter: blur(14px);
+    }
+    .nav-logo {
+      font-family: var(--mono); font-size: 13px; font-weight: 500;
+      color: var(--em); letter-spacing: .04em; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      color: var(--txt-dim); text-decoration: none; text-transform: uppercase;
+      transition: color .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--txt); }
+    .nav-links a.active { color: var(--em); }
+    .nav-cta {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      color: var(--em); text-decoration: none; text-transform: uppercase;
+      border: 1.5px solid rgba(45,212,160,0.3); padding: 8px 18px; border-radius: 3px;
+      background: rgba(45,212,160,0.05);
+      transition: background .2s, border-color .2s;
+    }
+    .nav-cta:hover { background: rgba(45,212,160,0.10); border-color: var(--em); }
+
+    /* ─── PAGE HERO ──────────────────────────────────────────  */
+    .page-hero {
+      min-height: 52vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 64px 120px 80px 48px;
+      position: relative;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .page-breadcrumb {
+      font-family: var(--mono); font-size: 11px; color: var(--txt-dim);
+      letter-spacing: .1em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 28px;
+      animation: fadeUp .8s var(--ease) both;
+    }
+    .page-breadcrumb a { color: var(--txt-dim); text-decoration: none; transition: color .2s; }
+    .page-breadcrumb a:hover { color: var(--em); }
+    .page-breadcrumb span { color: var(--em); }
+    .page-title {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4.5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      animation: fadeUp .8s .1s var(--ease) both;
+      max-width: 100%;
+      overflow: visible;
+    }
+    .page-title em {
+      font-style: italic;
+      display: inline;
+      background: linear-gradient(135deg, var(--em) 0%, var(--em-dim) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      padding-right: 6px;
+    }
+    .page-subtitle {
+      font-family: var(--mono); font-size: 13px; color: var(--txt-mid);
+      letter-spacing: .04em; margin-top: 20px;
+      animation: fadeUp .8s .2s var(--ease) both;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .page-subtitle::before {
+      content: ''; display: block;
+      width: 28px; height: 1px;
+      background: linear-gradient(90deg, var(--em), transparent);
+    }
+
+    /* ─── LAYOUT COMMUN ──────────────────────────────────────  */
+    .container { padding: 0 48px; }
+
+    /* ─── SECTION PROFIL ─────────────────────────────────────  */
+    #profil {
+      padding: 96px 48px;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 80px;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-label {
+      font-family: var(--mono); font-size: 11px; color: var(--em);
+      letter-spacing: .12em; text-transform: uppercase; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after {
+      content: ''; flex: 0 0 24px; height: 1px;
+      background: linear-gradient(90deg, var(--em), transparent);
+    }
+    .profil-title {
+      font-family: var(--serif);
+      font-size: clamp(32px, 3.5vw, 48px);
+      line-height: 1.05; letter-spacing: -.02em;
+      margin-bottom: 24px; color: var(--txt);
+    }
+    .profil-body {
+      font-size: 15px; color: var(--txt-mid);
+      line-height: 1.85;
+    }
+    .profil-body p + p { margin-top: 16px; }
+
+    /* Carte identité */
+    .id-card {
+      background: var(--surface);
+      border: 1px solid var(--line2);
+      border-radius: 14px;
+      padding: 36px;
+      align-self: start;
+      position: relative;
+      overflow: hidden;
+    }
+    .id-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--em), var(--em-dim), transparent);
+    }
+    .id-card-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 28px; padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .id-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--em-deep), var(--em));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--serif); font-size: 20px; color: #0a1510;
+      flex-shrink: 0;
+    }
+    .id-name {
+      font-family: var(--serif); font-size: 20px;
+      line-height: 1.1; color: var(--txt);
+    }
+    .id-role {
+      font-family: var(--mono); font-size: 11px;
+      color: var(--em); letter-spacing: .06em; margin-top: 3px;
+    }
+    .id-fields { list-style: none; display: flex; flex-direction: column; gap: 0; }
+    .id-field {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 11px 0; border-bottom: 1px solid var(--line);
+      gap: 12px;
+    }
+    .id-field:last-child { border-bottom: none; }
+    .id-key {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      letter-spacing: .08em; text-transform: uppercase; flex-shrink: 0;
+    }
+    .id-val { font-size: 13px; color: var(--txt); text-align: right; }
+    .id-val-em { color: var(--em); font-family: var(--mono); font-size: 12px; }
+    .id-download {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 24px; padding: 12px;
+      background: rgba(45,212,160,0.06);
+      border: 1px solid rgba(45,212,160,0.2);
+      border-radius: 8px;
+      font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--em);
+      text-decoration: none;
+      transition: background .2s, border-color .2s;
+    }
+    .id-download:hover { background: rgba(45,212,160,0.12); border-color: var(--em); }
+
+    /* ─── SECTION EXPÉRIENCES ────────────────────────────────  */
+    #experiences {
+      padding: 96px 48px;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 56px; padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-num {
+      font-family: var(--mono); font-size: 11px; color: var(--em);
+      letter-spacing: .1em; margin-bottom: 6px;
+    }
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(30px, 3.5vw, 44px);
+      line-height: 1.05; letter-spacing: -.02em; color: var(--txt);
+    }
+
+    /* Timeline horizontale d'expériences */
+    .xp-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--line);
+    }
+    .xp-item {
+      background: var(--bg);
+      padding: 40px;
+      position: relative;
+      transition: background .3s;
+    }
+    .xp-item:hover { background: var(--bg2); }
+    .xp-item::before {
+      content: '';
+      position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+      background: transparent;
+      transition: background .3s;
+    }
+    .xp-item:hover::before {
+      background: linear-gradient(180deg, var(--em), transparent);
+    }
+    .xp-period {
+      font-family: var(--mono); font-size: 11px; color: var(--em);
+      letter-spacing: .08em; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .xp-period-dot {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--em);
+      flex-shrink: 0;
+    }
+    .xp-title {
+      font-family: var(--serif); font-size: 20px;
+      line-height: 1.2; color: var(--txt); margin-bottom: 6px;
+    }
+    .xp-company {
+      font-family: var(--mono); font-size: 12px; color: var(--txt-mid);
+      letter-spacing: .04em; margin-bottom: 16px;
+    }
+    .xp-desc {
+      font-size: 14px; color: var(--txt-mid); line-height: 1.7;
+    }
+    .xp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+    .tag {
+      font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+      text-transform: uppercase; padding: 4px 10px;
+      border: 1px solid var(--line2); border-radius: 20px;
+      color: var(--em-dim); background: rgba(45,212,160,0.06);
+    }
+
+    /* ─── SECTION FORMATION ──────────────────────────────────  */
+    #formation {
+      padding: 96px 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    /* Timeline verticale */
+    .timeline { list-style: none; }
+    .tl-item {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 20px;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    .tl-item:last-child { border-bottom: none; }
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: 62px; top: 30px; bottom: -1px; width: 1px;
+      background: linear-gradient(180deg, var(--em-dim), transparent);
+    }
+    .tl-item:last-child::before { display: none; }
+    .tl-year {
+      font-family: var(--mono); font-size: 10px; color: var(--txt-dim);
+      letter-spacing: .04em; line-height: 1.4; padding-top: 3px;
+    }
+    .tl-dot {
+      position: absolute; left: 58px; top: 30px;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--em);
+      box-shadow: 0 0 0 3px rgba(45,212,160,0.12);
+    }
+    .tl-title { font-size: 15px; font-weight: 500; color: var(--txt); margin-bottom: 3px; }
+    .tl-sub { font-size: 12px; color: var(--txt-dim); }
+
+    /* ─── SECTION COMPÉTENCES DÉTAILLÉES ─────────────────────  */
+    #competences {
+      padding: 96px 48px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--line);
+    }
+    .skills-full-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .skill-group {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .skill-group-title {
+      font-family: var(--mono); font-size: 10px; color: var(--em);
+      letter-spacing: .12em; text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .skill-group-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(45,212,160,0.3), transparent);
+    }
+    .skill-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .skill-item {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 8px;
+    }
+    .skill-name { font-size: 13px; color: var(--txt); }
+    .skill-dots { display: flex; gap: 3px; }
+    .skill-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(45,212,160,0.15); border: 1px solid rgba(45,212,160,0.25);
+    }
+    .skill-dot.on { background: var(--em); border-color: var(--em); }
+
+    /* ─── SECTION PROJETS NOTABLES ───────────────────────────  */
+    #projets-notables {
+      padding: 96px 48px;
+      border-bottom: 1px solid var(--line);
+    }
+    .projects-list { list-style: none; display: flex; flex-direction: column; gap: 0; }
+    .project-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 160px 120px;
+      align-items: center;
+      gap: 24px;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--line);
+      text-decoration: none;
+      color: inherit;
+      transition: background .2s;
+      border-radius: 4px;
+      margin: 0 -16px;
+      padding-left: 16px; padding-right: 16px;
+    }
+    .project-row:first-child { border-top: 1px solid var(--line); }
+    .project-row:hover { background: var(--bg2); }
+    .project-row:hover .pr-arrow { color: var(--em); transform: translate(3px,-3px); }
+    .pr-index {
+      font-family: var(--mono); font-size: 11px; color: var(--txt-dim);
+      letter-spacing: .06em;
+    }
+    .pr-title { font-family: var(--serif); font-size: 20px; color: var(--txt); line-height: 1.2; }
+    .pr-period {
+      font-family: var(--mono); font-size: 11px; color: var(--txt-dim);
+      letter-spacing: .04em; text-align: right;
+    }
+    .pr-arrow {
+      display: flex; justify-content: flex-end; color: var(--txt-dim);
+      transition: color .2s, transform .3s;
+    }
+
+    /* ─── SECTION LOISIRS ────────────────────────────────────  */
+    #loisirs {
+      padding: 80px 48px;
+      border-bottom: 1px solid var(--line);
+    }
+    .loisirs-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 0;
+    }
+    .loisir-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 28px 24px;
+      display: flex; flex-direction: column; gap: 12px;
+      transition: border-color .3s, transform .3s;
+    }
+    .loisir-card:hover { border-color: rgba(45,212,160,0.3); transform: translateY(-3px); }
+    .loisir-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(45,212,160,0.08); border: 1px solid var(--line2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--em); font-size: 16px;
+    }
+    .loisir-title { font-size: 14px; font-weight: 500; color: var(--txt); }
+    .loisir-desc { font-size: 12px; color: var(--txt-dim); line-height: 1.5; }
+
+    /* ─── CTA BAS DE PAGE ────────────────────────────────────  */
+    #cta {
+      padding: 96px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+    }
+    .cta-left {
+      flex: 1 1 auto;
+      min-width: 340px;
+    }
+    .cta-label {
+      font-family: var(--mono); font-size: 11px; color: var(--em);
+      letter-spacing: .1em; text-transform: uppercase; margin-bottom: 16px;
+    }
+    .cta-title {
+      font-family: var(--serif);
+      font-size: clamp(32px, 3.5vw, 52px);
+      line-height: 1.05; letter-spacing: -.02em; color: var(--txt);
+    }
+    .cta-title em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--em), var(--em-dim));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      padding-right: 6px;
+    }
+    .cta-actions { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--em) 0%, var(--em-dim) 100%);
+      color: #0a1510;
+      font-family: var(--mono); font-size: 12px; font-weight: 500;
+      letter-spacing: .08em; text-transform: uppercase;
+      text-decoration: none; padding: 14px 28px; border-radius: 3px;
+      box-shadow: 0 4px 24px rgba(45,212,160,0.22);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .btn-primary:hover { box-shadow: 0 6px 32px rgba(45,212,160,0.35); transform: translateY(-1px); }
+    .btn-ghost {
+      font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--txt-dim);
+      text-decoration: none; transition: color .2s;
+    }
+    .btn-ghost:hover { color: var(--em); }
+
+    /* ─── FOOTER ─────────────────────────────────────────────  */
+    footer {
+      padding: 22px 48px;
+      border-top: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-copy {
+      font-family: var(--mono); font-size: 11px; color: var(--txt-dim);
+    }
+    .footer-back {
+      font-family: var(--mono); font-size: 11px; color: var(--txt-dim);
+      text-decoration: none; letter-spacing: .08em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px; transition: color .2s;
+    }
+    .footer-back:hover { color: var(--em); }
+
+    /* ─── ANIMATIONS ─────────────────────────────────────────  */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .75s var(--ease), transform .75s var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-d1 { transition-delay: .1s; }
+    .reveal-d2 { transition-delay: .2s; }
+    .reveal-d3 { transition-delay: .3s; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────  */
+    @media (max-width: 960px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .page-hero { padding: 64px 20px 40px; }
+      #profil { grid-template-columns: 1fr; padding: 64px 20px; gap: 40px; }
+      #experiences { padding: 64px 20px; }
+      .xp-grid { grid-template-columns: 1fr; }
+      #formation { grid-template-columns: 1fr; padding: 64px 20px; gap: 40px; }
+      #competences { padding: 64px 20px; }
+      .skills-full-grid { grid-template-columns: repeat(2, 1fr); }
+      #projets-notables { padding: 64px 20px; }
+      .project-row { grid-template-columns: 48px 1fr; }
+      .pr-period, .pr-arrow { display: none; }
+      #loisirs { padding: 64px 20px; }
+      .loisirs-grid { grid-template-columns: repeat(2, 1fr); }
+      #cta { flex-direction: column; padding: 64px 20px; align-items: flex-start; }
+      footer { padding: 18px 20px; }
+      body { cursor: auto; }
+      #cursor, #cursor-ring { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <main>
+
+  <!-- ─── NAV ──────────────────────────────────────────────── -->
+  <nav>
+    <a href="index.html" class="nav-logo">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html#competences">Accueil</a></li>
+      <li><a href="index.html#projets">Projets</a></li>
+      <li><a href="about.html" class="active">À propos</a></li>
+      <li><a href="cv.html">CV</a></li>
+    </ul>
+    <a href="contact.html" class="nav-cta">Contact</a>
+  </nav>
+
+  <!-- ─── PAGE HERO ─────────────────────────────────────────── -->
+  <div class="page-hero" style="position:relative;overflow:hidden;">
+    <div class="page-breadcrumb">
+      <a href="index.html">Accueil</a>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>À propos</span>
+    </div>
+    <h1 class="page-title">
+      CV &amp; <em>Parcours</em>
+    </h1>
+    <p class="page-subtitle">Développeur Power Platform / Chef de projet — Alternant chez INEO Atlantique</p>
+  </div>
+
+  <!-- ─── PROFIL ────────────────────────────────────────────── -->
+  <section id="profil">
+    <div class="profil-text reveal">
+      <div class="section-label">Qui je suis</div>
+      <h2 class="profil-title">Passionné de<br>développement<br><em style="font-style:italic;background:linear-gradient(135deg,var(--em),var(--em-dim));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;padding-right:6px">métier &amp; web</em></h2>
+      <div class="profil-body">
+        <p>
+          Je m'appelle Bonnet Antoine, j'ai 21 ans, développeur en alternance depuis 3 ans chez
+          INEO Atlantique Services (Groupe Equans), basé à La Chapelle-sur-Erdre, près de Nantes.
+        </p>
+        <p>
+          Mon quotidien tourne autour de la <strong style="color:var(--txt);font-weight:500">Power Platform Microsoft</strong> — je conçois et déploie
+          des applications métier avec Power Apps, j'automatise des processus avec Power Automate,
+          et j'administre l'architecture SharePoint de l'agence nantaise.
+        </p>
+        <p>
+          J'ai aussi une solide expérience web (HTML, CSS, JavaScript, PHP/Laravel)
+          et j'explore régulièrement Python, les APIs REST et les outils Azure.
+          Côté formation, je prépare actuellement ma Licence Informatique au CNAM / Institut Informatique Appliquée à Saint-Nazaire.
+        </p>
+        <p>
+          En dehors du code : je surfe sur les côtes vendéennes, joue aux jeux vidéo ,écoute énormément de musique, fais de la veille technique quotidiennement et je voyage dès que j'en ai l'occasion.
+        </p>
+      </div>
+    </div>
+
+    <!-- Carte identité -->
+    <div class="id-card reveal reveal-d1">
+      <div class="id-card-header">
+        <div class="id-avatar">AB</div>
+        <div>
+          <div class="id-name">Antoine Bonnet</div>
+          <div class="id-role">Développeur Power Platform <br> Chef de projet</div>
+        </div>
+      </div>
+      <ul class="id-fields">
+        <li class="id-field">
+          <span class="id-key">Formation</span>
+          <span class="id-val">L3 Informatique — CNAM</span>
+        </li>
+        <li class="id-field">
+          <span class="id-key">Entreprise</span>
+          <span class="id-val">INEO Atlantique, Groupe Equans</span>
+        </li>
+        <li class="id-field">
+          <span class="id-key">Localisation</span>
+          <span class="id-val">Nantes / Angers</span>
+        </li>
+        <li class="id-field">
+          <span class="id-key">Email</span>
+          <span class="id-val"><a href="mailto:antoinebonnet54@gmail.com" style="color:var(--em);text-decoration:none">antoinebonnet54@gmail.com</a></span>
+        </li>
+        <li class="id-field">
+          <span class="id-key">GitHub</span>
+          <span class="id-val"><a href="https://github.com/BonnetAntoine" target="_blank" rel="noopener" style="color:var(--em);text-decoration:none">BonnetAntoine</a></span>
+        </li>
+        <li class="id-field">
+          <span class="id-key">Statut</span>
+          <span class="id-val id-val-em">● Alternant — disponible</span>
+        </li>
+      </ul>
+      <a href="cv.html" class="id-download">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 2v7M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Télécharger le CV
+      </a>
+    </div>
+  </section>
+
+  <!-- ─── EXPÉRIENCES ───────────────────────────────────────── -->
+  <section id="experiences">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-num">01 / Expériences</div>
+        <h2 class="section-title">Parcours professionnel</h2>
+      </div>
+    </div>
+
+    <div class="xp-grid">
+
+      <div class="xp-item reveal">
+        <div class="xp-period"><div class="xp-period-dot"></div>2022 → aujourd'hui</div>
+        <h3 class="xp-title">Alternant développeur Power Platform</h3>
+        <div class="xp-company">INEO Atlantique Services — Groupe Equans, La Chapelle-sur-Erdre</div>
+        <p class="xp-desc">
+          Conception et déploiement d'applications métier sur Power Apps, automatisation
+          de processus avec Power Automate, administration SharePoint. Migration d'outils
+          legacy VBA/Excel vers des architectures modernes. Développement de solutions
+          de gestion des congés, contrats, onboarding et réservation de matériels.
+        </p>
+        <div class="xp-tags">
+          <span class="tag">Power Apps</span>
+          <span class="tag">Power Automate</span>
+          <span class="tag">SharePoint</span>
+          <span class="tag">PowerFX</span>
+          <span class="tag">REST API</span>
+        </div>
+      </div>
+
+      <div class="xp-item reveal reveal-d1">
+        <div class="xp-period"><div class="xp-period-dot"></div>Chef d'équipe — Saisonnier</div>
+        <h3 class="xp-title">Exploitation agricole</h3>
+        <div class="xp-company">Auvergne (63)</div>
+        <p class="xp-desc">
+          Encadrement d'une équipe lors de travaux saisonniers.
+          Organisation des tâches, gestion des priorités et coordination
+          sur le terrain. Première expérience de management opérationnel.
+        </p>
+        <div class="xp-tags">
+          <span class="tag">Management</span>
+          <span class="tag">Organisation</span>
+        </div>
+      </div>
+
+      <div class="xp-item reveal reveal-d2">
+        <div class="xp-period"><div class="xp-period-dot"></div>Stage — 3ème</div>
+        <h3 class="xp-title">Service informatique</h3>
+        <div class="xp-company">SDIS 63 — Puy-de-Dôme</div>
+        <p class="xp-desc">
+          Découverte du milieu informatique professionnel au sein du service
+          départemental d'incendie et de secours. Observation et participation
+          aux tâches de support et maintenance.
+        </p>
+        <div class="xp-tags">
+          <span class="tag">Support</span>
+          <span class="tag">Réseau</span>
+        </div>
+      </div>
+
+      <div class="xp-item reveal reveal-d3">
+        <div class="xp-period"><div class="xp-period-dot"></div>Projet — 1ère année BTS</div>
+        <h3 class="xp-title">Site vitrine Lycan Conseil</h3>
+        <div class="xp-company">Projet personnel — La Plaine-sur-mer</div>
+        <p class="xp-desc">
+          Conception et développement complet d'un site vitrine pour un cabinet
+          de conseil. Design responsive, formulaire de contact PHP, déploiement.
+          Premier projet web autonome de bout en bout.
+        </p>
+        <div class="xp-tags">
+          <span class="tag">HTML/CSS</span>
+          <span class="tag">JavaScript</span>
+          <span class="tag">PHP</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── FORMATION ─────────────────────────────────────────── -->
+  <section id="formation">
+    <div class="reveal">
+      <div class="section-num" style="margin-bottom:6px">02 / Formation</div>
+      <h2 class="section-title" style="margin-bottom:40px">Parcours scolaire</h2>
+      <ul class="timeline">
+        <li class="tl-item">
+          <span class="tl-year">2025<br>2026</span>
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-title">Licence Informatique (L3)</div>
+            <div class="tl-sub">CNAM / Institut Informatique Appliquée — Saint-Nazaire</div>
+          </div>
+        </li>
+        <li class="tl-item">
+          <span class="tl-year">2023<br>2025</span>
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-title">BTS SIO option SLAM</div>
+            <div class="tl-sub">Institut Informatique Appliquée — Saint-Nazaire</div>
+          </div>
+        </li>
+        <li class="tl-item">
+          <span class="tl-year">2021<br>2023</span>
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-title">Baccalauréat technologique STI2D</div>
+            <div class="tl-sub">Lycée Jean Zay — Thiers (63)</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="reveal reveal-d1">
+      <div class="section-num" style="margin-bottom:6px">03 / Formations complémentaires</div>
+      <h2 class="section-title" style="margin-bottom:40px">Autres projets &amp; formations</h2>
+      <ul class="timeline">
+        <li class="tl-item">
+          <span class="tl-year">2023</span>
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-title">Unreal Engine 5 — Game Dev</div>
+            <div class="tl-sub">Auto-formation — 1ère</div>
+          </div>
+        </li>
+        <li class="tl-item">
+          <span class="tl-year">2022</span>
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-title">Stellar Song — Projet musical</div>
+            <div class="tl-sub">Projet de bénévolat — Terminale</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─── COMPÉTENCES ───────────────────────────────────────── -->
+  <section id="competences">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-num">04 / Stack</div>
+        <h2 class="section-title">Compétences techniques</h2>
+      </div>
+    </div>
+    <div class="skills-full-grid reveal">
+
+      <div class="skill-group">
+        <div class="skill-group-title">Power Platform</div>
+        <ul class="skill-list">
+          <li class="skill-item"><span class="skill-name">Power Apps</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">Power Automate</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">SharePoint</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">Power BI</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">PowerFX</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div></div></li>
+        </ul>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">Web front</div>
+        <ul class="skill-list">
+          <li class="skill-item"><span class="skill-name">HTML / CSS</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div></div></li>
+          <li class="skill-item"><span class="skill-name">JavaScript</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">Bootstrap</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+        </ul>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">Back-end &amp; BDD</div>
+        <ul class="skill-list">
+          <li class="skill-item"><span class="skill-name">PHP</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">Laravel</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">MySQL</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">Python</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+        </ul>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">Outils &amp; autres</div>
+        <ul class="skill-list">
+          <li class="skill-item"><span class="skill-name">Git / GitHub</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">Azure / Intune</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">C#</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+          <li class="skill-item"><span class="skill-name">Kotlin</span>
+            <div class="skill-dots"><div class="skill-dot on"></div><div class="skill-dot"></div><div class="skill-dot"></div><div class="skill-dot"></div><div class="skill-dot"></div></div></li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── PROJETS NOTABLES ──────────────────────────────────── -->
+  <section id="projets-notables">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-num">05 / Projets</div>
+        <h2 class="section-title">Réalisations notables</h2>
+      </div>
+      <a href="index-portfolio.html" style="font-family:var(--mono);font-size:12px;color:var(--txt-dim);text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .2s" onmouseover="this.style.color='var(--em)'" onmouseout="this.style.color='var(--txt-dim)'">Tous les projets →</a>
+    </div>
+    <ul class="projects-list reveal">
+      <a href="project01.html" class="project-row">
+        <span class="pr-index">01</span>
+        <span class="pr-title">Gestion des congés</span>
+        <span class="pr-period">2023 — INEO Atlantique</span>
+        <span class="pr-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+      <a href="project3.html" class="project-row">
+        <span class="pr-index">02</span>
+        <span class="pr-title">Automatisation des contrats nationaux</span>
+        <span class="pr-period">2024 — INEO Atlantique</span>
+        <span class="pr-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+      <a href="project02.html" class="project-row">
+        <span class="pr-index">03</span>
+        <span class="pr-title">Site vitrine Lycan Conseil</span>
+        <span class="pr-period">2023 — Projet BTS</span>
+        <span class="pr-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+    </ul>
+  </section>
+
+  <!-- ─── LOISIRS ───────────────────────────────────────────── -->
+  <section id="loisirs">
+    <div class="section-header reveal">
+      <div>
+        <div class="section-num">06 / Centres d'intérêt</div>
+        <h2 class="section-title">En dehors du code</h2>
+      </div>
+    </div>
+    <div class="loisirs-grid">
+      <div class="loisir-card reveal">
+        <div class="loisir-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-8 3 5 2-3 4 6"/><circle cx="18" cy="6" r="3"/></svg>
+        </div>
+        <div class="loisir-title">Surf</div>
+        <div class="loisir-desc">Côtes vendéennes et atlantiques. La lecture des vagues comme la lecture du code : une question de patterns.</div>
+      </div>
+      <!-- <div class="loisir-card reveal reveal-d1">
+        <div class="loisir-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <div class="loisir-title">Diablo IV</div>
+        <div class="loisir-desc">Build Nécromancien optimisé. L'optimisation des stats de personnage, c'est du min-maxing appliqué.</div>
+      </div> -->
+      <!-- <div class="loisir-card reveal reveal-d2">
+        <div class="loisir-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 6V3M7 9h.01M12 9h.01M17 9h.01M7 13h.01M12 13h.01M17 13h.01"/></svg>
+        </div>
+        <div class="loisir-title">Balatro</div>
+        <div class="loisir-desc">Stratégie de deck et synergies. L'art de construire des combos — pas si éloigné des flows Power Automate.</div>
+      </div> -->
+      <div class="loisir-card reveal reveal-d3">
+        <div class="loisir-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <div class="loisir-title">Veille tech</div>
+        <div class="loisir-desc">Power Platform, web dev, cybersécurité. Toujours un onglet de plus ouvert sur une nouveauté.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ───────────────────────────────────────────────── -->
+  <section id="cta">
+    <div class="cta-left reveal">
+      <div class="cta-label">Vous avez un projet ?</div>
+      <h2 class="cta-title">Travaillons<br><em style="padding-right:6px">ensemble</em></h2>
+    </div>
+    <div class="cta-actions reveal reveal-d1">
+      <a href="contact.html" class="btn-primary">
+        Me contacter
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="index.html#projets" class="btn-ghost">Voir mes projets →</a>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ─── FOOTER ────────────────────────────────────────────── -->
+  <footer>
+    <span class="footer-copy">© 2025 Antoine Bonnet. Tous droits réservés.</span>
+    <a href="#" class="footer-back">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 10V2M2 6l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Retour en haut
+    </a>
+  </footer>
+
+  <!-- ─── JS ────────────────────────────────────────────────── -->
+  <script>
+    /* ── Particules ── */
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      const EM = '45,212,160';
+      const PARTICLE_COUNT = 150;
+      const CONNECTION_DIST = 150;
+      const MOUSE_RADIUS = 130;
+      let W, H, particles, mouse = { x: -9999, y: -9999 };
+
+      /* ── Constellation double croche ── */
+      const NOTE_STARS = [
+        // Tête note 1 (bas gauche)
+        { nx: 0.12, ny: 0.92, r: 2.8 },  // 0
+        { nx: 0.20, ny: 0.96, r: 2.0 },  // 1
+        { nx: 0.32, ny: 0.94, r: 2.0 },  // 2
+        { nx: 0.26, ny: 0.86, r: 2.0 },  // 3
+        { nx: 0.14, ny: 0.86, r: 2.0 },  // 4
+        // Sommet hampe 1
+        { nx: 0.32, ny: 0.20, r: 1.8 },  // 5
+        // Tête note 2 (décalée à droite)
+        { nx: 0.52, ny: 0.82, r: 2.8 },  // 6
+        { nx: 0.60, ny: 0.86, r: 2.0 },  // 7
+        { nx: 0.72, ny: 0.84, r: 2.0 },  // 8
+        { nx: 0.66, ny: 0.76, r: 2.0 },  // 9
+        { nx: 0.54, ny: 0.76, r: 2.0 },  // 10
+        // Sommet hampe 2
+        { nx: 0.72, ny: 0.20, r: 1.8 },  // 11
+        // Barres de liaison (invisibles, juste pour les edges)
+        { nx: 0.32, ny: 0.20, r: 0.0 },  // 12
+        { nx: 0.72, ny: 0.20, r: 0.0 },  // 13
+        { nx: 0.32, ny: 0.32, r: 0.0 },  // 14
+        { nx: 0.72, ny: 0.32, r: 0.0 },  // 15
+      ];
+      const NOTE_EDGES = [
+        // Tête note 1
+        [0,1],[1,2],[2,3],[3,4],[4,0],
+        // Hampe note 1
+        [2,5],
+        // Tête note 2
+        [6,7],[7,8],[8,9],[9,10],[10,6],
+        // Hampe note 2
+        [8,11],
+        // Barre liaison 1 (haut)
+        [5,11],
+        // Barre liaison 2 (milieu)
+        [14,15],
+      ];
+      const introStart = performance.now();
+      const INTRO_DURATION = 2500;
+
+      function noteStarPos(star) {
+        const pad  = 80;
+        const size = Math.min(H * 0.55, W * 0.18);
+        const offsetX = W * 0.72;
+        const offsetY = H * 0.05 + pad;
+        return { x: offsetX + star.nx * size, y: offsetY + star.ny * size };
+      }
+
+      function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+      function drawNote(now) {
+        const p = easeOutCubic(Math.min((now - introStart) / INTRO_DURATION, 1));
+
+        NOTE_EDGES.forEach(([ia, ib], idx) => {
+          const lineP = Math.max(0, Math.min(1, p * NOTE_EDGES.length - idx));
+          if (lineP <= 0) return;
+          const a = noteStarPos(NOTE_STARS[ia]), b = noteStarPos(NOTE_STARS[ib]);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(a.x + (b.x - a.x) * lineP, a.y + (b.y - a.y) * lineP);
+          ctx.strokeStyle = `rgba(${EM},0.30)`;
+          ctx.lineWidth = 1; ctx.stroke();
+        });
+
+        NOTE_STARS.forEach((star, idx) => {
+          if (star.r === 0) return;
+          const starP = Math.max(0, Math.min(1, p * NOTE_STARS.length * 0.9 - idx));
+          if (starP <= 0) return;
+          const pos = noteStarPos(star);
+          const grd = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, star.r * 5);
+          grd.addColorStop(0, `rgba(${EM},${0.25 * starP})`);
+          grd.addColorStop(1, `rgba(${EM},0)`);
+          ctx.beginPath(); ctx.arc(pos.x, pos.y, star.r * 5, 0, Math.PI * 2);
+          ctx.fillStyle = grd; ctx.fill();
+          ctx.beginPath(); ctx.arc(pos.x, pos.y, star.r * starP, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${EM},${0.9 * starP})`; ctx.fill();
+        });
+      }
+
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      function rand(a, b) { return a + Math.random() * (b - a); }
+
+      function createParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          particles.push({
+            x: Math.random() * W, y: Math.random() * H,
+            vx: rand(-0.22, 0.22), vy: rand(-0.18, 0.18),
+            r: rand(1.5, 2.8), opacity: rand(0.55, 0.95),
+          });
+        }
+      }
+
+      function draw(now) {
+        ctx.clearRect(0, 0, W, H);
+
+        /* Constellation dessinée en premier (derrière les particules) */
+        drawNote(now);
+
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i], b = particles[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < CONNECTION_DIST) {
+              ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(${EM},${(1 - dist/CONNECTION_DIST) * 0.22})`;
+              ctx.lineWidth = 0.8; ctx.stroke();
+            }
+          }
+        }
+        particles.forEach(p => {
+          const mdx = mouse.x - p.x, mdy = mouse.y - p.y;
+          const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
+          if (mdist < MOUSE_RADIUS) { const f = (1 - mdist/MOUSE_RADIUS) * 0.012; p.vx += mdx*f; p.vy += mdy*f; }
+          const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+          if (speed < 0.12) { p.vx += (Math.random()-.5)*.08; p.vy += (Math.random()-.5)*.08; }
+          if (speed > 0.8)  { p.vx = p.vx/speed*.8; p.vy = p.vy/speed*.8; }
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0) { p.x = 0; p.vx *= -1; } if (p.x > W) { p.x = W; p.vx *= -1; }
+          if (p.y < 0) { p.y = 0; p.vy *= -1; } if (p.y > H) { p.y = H; p.vy *= -1; }
+          const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
+          glow.addColorStop(0, `rgba(${EM},${p.opacity * 0.35})`);
+          glow.addColorStop(1, `rgba(${EM},0)`);
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI*2); ctx.fillStyle = glow; ctx.fill();
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${EM},${p.opacity})`; ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+      resize(); createParticles(); requestAnimationFrame(draw);
+    })();
+
+    /* ── Curseur ── */
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    (function tick() {
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+      rx += (mx - rx) * 0.13; ry += (my - ry) * 0.13;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(tick);
+    })();
+
+    /* ── Reveal au scroll ── */
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      });
+    }, { threshold: 0.10 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  </script>
+
+</body>
+</html>
